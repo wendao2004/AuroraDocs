@@ -4,6 +4,7 @@ const STORAGE_KEYS = {
   TASKS: 'aurora_docs_tasks',
   CURRENT_USER: 'aurora_docs_current_user',
   APP_SETTINGS: 'aurora_docs_settings',
+  DOCUMENT_VERSIONS: 'aurora_docs_document_versions',
 }
 
 export const storage = {
