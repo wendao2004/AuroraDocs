@@ -52,12 +52,14 @@ npm run tauri build
 
 | 功能 | 说明 |
 |------|------|
-| **富文本编辑器** | 基于 Tiptap 的编辑器，支持加粗、斜体、删除线、行内代码、多级标题、有序/无序列表、引用块、代码块、撤销/重做 |
+| **富文本编辑器** | 基于 Tiptap 的编辑器，支持加粗、斜体、删除线、行内代码、多级标题、有序/无序列表、引用块、撤销/重做 |
+| **代码块高亮** | 支持 13+ 编程语言（JavaScript、TypeScript、Python、Java、C++、Rust、Go 等）的语法高亮，macOS 风格语言选择器 |
 | **文档管理** | 完整的 CRUD 操作：创建、编辑、删除文档，支持本地 localStorage 持久化存储 |
 | **团队管理** | 创建团队、添加/移除成员、成员角色管理（所有者/管理员/成员） |
-| **任务管理** | 创建/编辑/删除任务、任务优先级（低/中/高）、任务状态（待处理/进行中/已完成）、截止日期、状态切换 |
+| **任务管理** | 创建/编辑/删除任务、任务优先级（低/中/高）、任务状态（待处理/进行中/已完成）、截止日期、状态切换、筛选过滤、统计看板 |
 | **链接分享** | 一键生成分享链接、复制到剪贴板功能 |
 | **本地存储** | 所有数据通过 localStorage 本地持久化存储 |
+| **现代化 UI** | 深色侧边栏、卡片式布局、渐变按钮、毛玻璃对话框、流畅动画 |
 
 ### 🔨 开发中
 
@@ -71,10 +73,11 @@ npm run tauri build
 
 - **框架**: Tauri 2 + Vue 3
 - **构建工具**: Vite + Cargo
-- **包管理**: pnpm
+- **包管理**: npm
 - **路由**: Vue Router
 - **状态管理**: Pinia
 - **编辑器**: Tiptap (ProseMirror)
+- **语法高亮**: lowlight + highlight.js
 
 ### 后端
 
@@ -92,9 +95,13 @@ npm run tauri build
 ```
 AuroraDocs/
 ├── src/                      # 前端源代码
+│   ├── assets/               # 静态资源
+│   │   └── styles/          # 全局样式
+│   │       └── global.css
 │   ├── components/           # Vue 组件
 │   │   ├── editor/          # 编辑器组件
-│   │   │   └── TiptapEditor.vue
+│   │   │   ├── TiptapEditor.vue
+│   │   │   └── CodeBlockComponent.vue
 │   │   └── layout/          # 布局组件
 │   │       ├── AppLayout.vue
 │   │       └── TitleBar.vue
@@ -104,7 +111,7 @@ AuroraDocs/
 │   │   ├── Team.ts
 │   │   └── User.ts
 │   ├── pages/               # 页面组件
-│   │   ├── DocumentPage.vue  # 文档管理页
+│   │   ├── DocumentPage.vue # 文档管理页
 │   │   ├── EditorPage.vue   # 编辑器页
 │   │   ├── TaskPage.vue     # 任务管理页
 │   │   └── TeamPage.vue     # 团队管理页
