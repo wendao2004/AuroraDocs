@@ -2,7 +2,7 @@
   <div class="task-page">
     <div class="page-header">
       <div class="header-left">
-        <h2>✅ 任务管理</h2>
+        <h2>任务</h2>
         <span class="task-count">{{ tasks.length }} 个任务</span>
       </div>
       <button class="btn btn-primary" @click="showCreateDialog = true">
@@ -11,26 +11,17 @@
     </div>
 
     <div class="task-stats">
-      <div class="stat-card pending">
-        <div class="stat-icon">📋</div>
-        <div class="stat-info">
-          <div class="stat-number">{{ taskStats.pending }}</div>
-          <div class="stat-label">待处理</div>
-        </div>
+      <div class="stat-item">
+        <span class="stat-number">{{ taskStats.pending }}</span>
+        <span class="stat-label">待处理</span>
       </div>
-      <div class="stat-card in-progress">
-        <div class="stat-icon">🔄</div>
-        <div class="stat-info">
-          <div class="stat-number">{{ taskStats.in_progress }}</div>
-          <div class="stat-label">进行中</div>
-        </div>
+      <div class="stat-item">
+        <span class="stat-number">{{ taskStats.in_progress }}</span>
+        <span class="stat-label">进行中</span>
       </div>
-      <div class="stat-card completed">
-        <div class="stat-icon">✨</div>
-        <div class="stat-info">
-          <div class="stat-number">{{ taskStats.completed }}</div>
-          <div class="stat-label">已完成</div>
-        </div>
+      <div class="stat-item">
+        <span class="stat-number">{{ taskStats.completed }}</span>
+        <span class="stat-label">已完成</span>
       </div>
     </div>
 
@@ -47,7 +38,12 @@
     </div>
 
     <div v-if="filteredTasks.length === 0" class="empty-state">
-      <div class="empty-icon">📋</div>
+      <div class="empty-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 11l3 3L22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+      </div>
       <h3>暂无任务</h3>
       <p>创建任务，开始你的 productivity</p>
       <button class="btn btn-primary" @click="showCreateDialog = true">创建第一个任务</button>
@@ -60,16 +56,14 @@
         class="task-item"
         :class="{ completed: task.status === 'completed' }"
       >
-        <div class="task-checkbox" @click.stop>
-          <label class="checkbox-wrapper">
-            <input
-              type="checkbox"
-              :checked="task.status === 'completed'"
-              @change="toggleTaskStatus(task.id, task.status)"
-            />
-            <span class="checkmark"></span>
-          </label>
-        </div>
+        <label class="checkbox-wrapper">
+          <input
+            type="checkbox"
+            :checked="task.status === 'completed'"
+            @change="toggleTaskStatus(task.id, task.status)"
+          />
+          <span class="checkmark"></span>
+        </label>
         <div class="task-content" @click="handleEditTask(task.id)">
           <div class="task-title">{{ task.title }}</div>
           <div class="task-meta">
@@ -90,16 +84,19 @@
             </span>
           </div>
         </div>
-        <div class="task-actions" @click.stop>
-          <button class="action-btn danger" @click="handleDelete(task.id)">删除</button>
-        </div>
+        <button class="delete-btn" @click.stop="handleDelete(task.id)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
       </div>
     </div>
 
     <div v-if="showCreateDialog" class="dialog-overlay" @click.self="closeCreateDialog">
       <div class="dialog">
         <div class="dialog-header">
-          <h3>{{ editingTaskId ? '✏️ 编辑任务' : '✨ 创建任务' }}</h3>
+          <h3>{{ editingTaskId ? '编辑任务' : '创建任务' }}</h3>
           <button class="close-btn" @click="closeCreateDialog">×</button>
         </div>
         <div class="dialog-content">
@@ -115,9 +112,9 @@
             <div class="form-group">
               <label>优先级</label>
               <select v-model="taskForm.priority" class="input">
-                <option value="low">🟢 低</option>
-                <option value="medium">🟡 中</option>
-                <option value="high">🔴 高</option>
+                <option value="low">低</option>
+                <option value="medium">中</option>
+                <option value="high">高</option>
               </select>
             </div>
             <div class="form-group">
@@ -138,7 +135,7 @@
     <div v-if="showDeleteDialog" class="dialog-overlay" @click.self="showDeleteDialog = false">
       <div class="dialog">
         <div class="dialog-header">
-          <h3>⚠️ 确认删除</h3>
+          <h3>确认删除</h3>
           <button class="close-btn" @click="showDeleteDialog = false">×</button>
         </div>
         <div class="dialog-content">
@@ -288,7 +285,7 @@ onMounted(() => {
 
 <style scoped>
 .task-page {
-  max-width: 1000px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
@@ -296,7 +293,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .header-left {
@@ -306,97 +303,59 @@ onMounted(() => {
 }
 
 .page-header h2 {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
 }
 
 .task-count {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--color-text-muted);
-  background: var(--color-bg-white);
-  padding: 4px 12px;
-  border-radius: 20px;
-  border: 1px solid var(--color-border-light);
 }
 
 .task-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-bottom: 32px;
-}
-
-.stat-card {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 24px;
+  padding: 16px 20px;
   background: var(--color-bg-white);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-border-light);
-  transition: all 0.2s ease;
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.stat-icon {
-  font-size: 32px;
-  width: 56px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-bg-gray);
   border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
 }
 
-.stat-card.pending .stat-icon { background: #fff7e6; }
-.stat-card.in-progress .stat-icon { background: #e6f7ff; }
-.stat-card.completed .stat-icon { background: #f6ffed; }
-
-.stat-info {
-  flex: 1;
+.stat-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .stat-number {
-  font-size: 32px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 600;
   color: var(--color-text-primary);
-  line-height: 1;
 }
 
 .stat-label {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--color-text-muted);
-  margin-top: 4px;
 }
 
 .task-filter {
   display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
-  background: var(--color-bg-white);
-  padding: 8px;
-  border-radius: var(--radius-lg);
-  width: fit-content;
+  gap: 4px;
+  margin-bottom: 16px;
 }
 
 .filter-btn {
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
+  padding: 6px 14px;
+  font-size: 13px;
   background: transparent;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   color: var(--color-text-secondary);
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .filter-btn:hover {
@@ -405,57 +364,54 @@ onMounted(() => {
 }
 
 .filter-btn.active {
-  background: var(--color-primary);
-  color: white;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
 }
 
 .empty-state {
   text-align: center;
-  padding: 80px 40px;
+  padding: 60px 40px;
   background: var(--color-bg-white);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
 }
 
 .empty-icon {
-  font-size: 64px;
-  margin-bottom: 24px;
+  color: var(--color-text-muted);
+  margin-bottom: 16px;
 }
 
 .empty-state h3 {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
 }
 
 .empty-state p {
   font-size: 14px;
   color: var(--color-text-muted);
-  margin: 0 0 24px 0;
+  margin: 0 0 20px 0;
 }
 
 .task-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 2px;
 }
 
 .task-item {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  padding: 12px 14px;
   background: var(--color-bg-white);
-  border-radius: var(--radius-lg);
-  padding: 16px 20px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-border-light);
-  transition: all 0.2s ease;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s ease;
 }
 
 .task-item:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-border);
+  background: var(--color-bg-gray);
 }
 
 .task-item.completed .task-title {
@@ -478,100 +434,92 @@ onMounted(() => {
 }
 
 .checkmark {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   border: 2px solid var(--color-border);
-  border-radius: 6px;
-  transition: all 0.2s ease;
+  border-radius: 4px;
+  transition: all 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .checkbox-wrapper input:checked + .checkmark {
-  background: var(--color-success);
-  border-color: var(--color-success);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .checkbox-wrapper input:checked + .checkmark::after {
   content: '✓';
   color: white;
-  font-size: 14px;
+  font-size: 11px;
   font-weight: bold;
 }
 
 .task-content {
   flex: 1;
   cursor: pointer;
+  min-width: 0;
 }
 
 .task-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--color-text-primary);
-  margin-bottom: 8px;
-  transition: all 0.2s ease;
+  margin-bottom: 4px;
 }
 
 .task-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .priority-badge,
 .status-badge {
-  padding: 4px 10px;
-  font-size: 12px;
+  padding: 2px 8px;
+  font-size: 11px;
   font-weight: 500;
-  border-radius: 20px;
+  border-radius: 4px;
   color: white;
 }
 
-.priority-badge.low { background: #52c41a; }
-.priority-badge.medium { background: #faad14; }
-.priority-badge.high { background: #f5222d; }
+.priority-badge.low { background: #34c759; }
+.priority-badge.medium { background: #ff9500; }
+.priority-badge.high { background: #ff3b30; }
 
-.status-badge.pending { background: #faad14; }
-.status-badge.in_progress { background: #1890ff; }
-.status-badge.completed { background: #52c41a; }
+.status-badge.pending { background: #ff9500; }
+.status-badge.in_progress { background: #007aff; }
+.status-badge.completed { background: #34c759; }
 
 .due-date {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--color-text-muted);
 }
 
-.task-actions {
+.delete-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--color-text-muted);
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: all 0.15s ease;
 }
 
-.task-item:hover .task-actions {
+.task-item:hover .delete-btn {
   opacity: 1;
 }
 
-.action-btn {
-  padding: 6px 12px;
-  font-size: 12px;
-  background: var(--color-bg-gray);
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  color: var(--color-text-secondary);
-}
-
-.action-btn:hover {
-  background: var(--color-bg-hover);
-}
-
-.action-btn.danger {
-  color: var(--color-danger);
-}
-
-.action-btn.danger:hover {
-  background: var(--color-danger-light);
+.delete-btn:hover {
+  background: #fff1f0;
+  color: #ff3b30;
 }
 
 .textarea {
@@ -582,5 +530,6 @@ onMounted(() => {
 .delete-warning {
   color: var(--color-text-secondary);
   line-height: 1.6;
+  font-size: 14px;
 }
 </style>
