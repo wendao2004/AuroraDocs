@@ -1,6 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import EditorPage from '../pages/EditorPage.vue'
 import DocumentPage from '../pages/DocumentPage.vue'
+import TaskPage from '../pages/TaskPage.vue'
 import TeamPage from '../pages/TeamPage.vue'
 
 const routes = [
@@ -13,6 +14,11 @@ const routes = [
     path: '/documents',
     name: 'Documents',
     component: DocumentPage,
+  },
+  {
+    path: '/tasks',
+    name: 'Tasks',
+    component: TaskPage,
   },
   {
     path: '/team',
