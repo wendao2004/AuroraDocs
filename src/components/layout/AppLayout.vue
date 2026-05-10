@@ -12,6 +12,10 @@
             <span class="icon">📁</span>
             <span class="text">文档</span>
           </router-link>
+          <router-link to="/tasks" class="nav-item">
+            <span class="icon">✅</span>
+            <span class="text">任务</span>
+          </router-link>
           <router-link to="/team" class="nav-item">
             <span class="icon">👥</span>
             <span class="text">团队</span>
