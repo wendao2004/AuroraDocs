@@ -48,13 +48,22 @@ npm run tauri build
 
 > 当前版本处于第一阶段开发，目标是实现 Windows 平台可运行的核心功能原型。
 
-| 功能 | 状态 | 说明 |
-|------|------|------|
-| Markdown 编辑器 | ✅ 已完成 | 基于 Tiptap 的富文本编辑，支持多种格式 |
-| 文档管理 | 🔨 开发中 | 文章列表、分类与检索 |
-| 团队管理 | 🔨 开发中 | 成员添加、角色分配 |
-| 任务管理 | 📋 计划中 | 任务创建、分配与进度跟踪 |
-| 链接分享 | 📋 计划中 | 一键生成分享链接 |
+### ✅ 已完成
+
+| 功能 | 说明 |
+|------|------|
+| **富文本编辑器** | 基于 Tiptap 的编辑器，支持加粗、斜体、删除线、行内代码、多级标题、有序/无序列表、引用块、代码块、撤销/重做 |
+| **文档管理** | 完整的 CRUD 操作：创建、编辑、删除文档，支持本地 localStorage 持久化存储 |
+| **团队管理** | 创建团队、添加/移除成员、成员角色管理（所有者/管理员/成员） |
+| **任务管理** | 创建/编辑/删除任务、任务优先级（低/中/高）、任务状态（待处理/进行中/已完成）、截止日期、状态切换 |
+| **链接分享** | 一键生成分享链接、复制到剪贴板功能 |
+| **本地存储** | 所有数据通过 localStorage 本地持久化存储 |
+
+### 🔨 开发中
+
+- [ ] 文档版本历史与回溯
+- [ ] 多文档分类与标签
+- [ ] 任务分配给团队成员
 
 ## 🛠️ 技术栈
 
@@ -74,9 +83,9 @@ npm run tauri build
 
 ### 基础设施
 
-- **数据库**: PostgreSQL
-- **容器化**: Docker
-- **实时协作**: Yjs
+- **数据库**: PostgreSQL (计划中)
+- **容器化**: Docker (计划中)
+- **实时协作**: Yjs (计划中)
 
 ## 📁 项目结构
 
@@ -85,15 +94,31 @@ AuroraDocs/
 ├── src/                      # 前端源代码
 │   ├── components/           # Vue 组件
 │   │   ├── editor/          # 编辑器组件
+│   │   │   └── TiptapEditor.vue
 │   │   └── layout/          # 布局组件
+│   │       ├── AppLayout.vue
+│   │       └── TitleBar.vue
 │   ├── models/              # 数据模型
-│   ├── pages/                # 页面组件
+│   │   ├── Document.ts
+│   │   ├── Task.ts
+│   │   ├── Team.ts
+│   │   └── User.ts
+│   ├── pages/               # 页面组件
 │   │   ├── DocumentPage.vue  # 文档管理页
 │   │   ├── EditorPage.vue   # 编辑器页
+│   │   ├── TaskPage.vue     # 任务管理页
 │   │   └── TeamPage.vue     # 团队管理页
 │   ├── router/               # 路由配置
-│   ├── services/             # API 服务
+│   │   └── index.ts
+│   ├── services/             # 业务服务
+│   │   ├── storage/         # 存储服务
+│   │   │   ├── documentService.ts
+│   │   │   ├── localStorage.ts
+│   │   │   ├── taskService.ts
+│   │   │   └── teamService.ts
+│   │   └── shareService.ts   # 分享服务
 │   ├── stores/               # Pinia 状态管理
+│   │   └── editorStore.ts
 │   ├── App.vue               # 根组件
 │   └── main.ts               # 入口文件
 ├── src-tauri/                # Tauri/Rust 后端
