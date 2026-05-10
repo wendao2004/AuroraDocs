@@ -2,7 +2,7 @@
   <div class="documents-page">
     <div class="page-header">
       <div class="header-left">
-        <h2>📁 文档管理</h2>
+        <h2>文档</h2>
         <span class="doc-count">{{ documents.length }} 个文档</span>
       </div>
       <button class="btn btn-primary" @click="handleCreate">
@@ -11,34 +11,53 @@
     </div>
 
     <div v-if="documents.length === 0" class="empty-state">
-      <div class="empty-icon">📝</div>
+      <div class="empty-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
       <h3>开始创作</h3>
       <p>创建你的第一个文档，开启知识管理之旅</p>
       <button class="btn btn-primary" @click="handleCreate">创建第一个文档</button>
     </div>
 
-    <div v-else class="document-grid">
+    <div v-else class="document-list">
       <div
         v-for="doc in documents"
         :key="doc.id"
-        class="document-card"
+        class="document-item"
         @click="handleEdit(doc.id)"
       >
-        <div class="card-header">
-          <div class="card-icon">📄</div>
-          <div class="card-actions" @click.stop>
-            <button class="action-btn" title="分享" @click="handleShare(doc.id)">分享</button>
-            <button class="action-btn danger" title="删除" @click="handleDelete(doc.id)">删除</button>
-          </div>
+        <div class="doc-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
         </div>
-        <div class="card-body">
-          <h4 class="card-title">{{ doc.title || '无标题文档' }}</h4>
-          <div class="card-meta">
-            <span class="meta-item">
-              <span class="meta-icon">🕐</span>
-              {{ formatDate(doc.updatedAt) }}
-            </span>
-          </div>
+        <div class="doc-info">
+          <div class="doc-title">{{ doc.title || '无标题文档' }}</div>
+          <div class="doc-meta">{{ formatDate(doc.updatedAt) }}</div>
+        </div>
+        <div class="doc-actions" @click.stop>
+          <button class="action-btn" @click="handleShare(doc.id)" title="分享">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="18" cy="5" r="3"/>
+              <circle cx="6" cy="12" r="3"/>
+              <circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+          </button>
+          <button class="action-btn danger" @click="handleDelete(doc.id)" title="删除">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
         </div>
       </div>
     </div>
@@ -46,7 +65,7 @@
     <div v-if="showShareDialog" class="dialog-overlay" @click.self="showShareDialog = false">
       <div class="dialog">
         <div class="dialog-header">
-          <h3>🔗 分享文档</h3>
+          <h3>分享文档</h3>
           <button class="close-btn" @click="showShareDialog = false">×</button>
         </div>
         <div class="dialog-content">
@@ -55,7 +74,7 @@
             <input v-model="shareLink" readonly class="input share-link-input" />
             <button class="btn btn-primary" @click="copyLink">复制</button>
           </div>
-          <p v-if="copySuccess" class="copy-success">✓ 复制成功！</p>
+          <p v-if="copySuccess" class="copy-success">复制成功！</p>
         </div>
       </div>
     </div>
@@ -63,7 +82,7 @@
     <div v-if="showDeleteDialog" class="dialog-overlay" @click.self="showDeleteDialog = false">
       <div class="dialog">
         <div class="dialog-header">
-          <h3>⚠️ 确认删除</h3>
+          <h3>确认删除</h3>
           <button class="close-btn" @click="showDeleteDialog = false">×</button>
         </div>
         <div class="dialog-content">
@@ -154,7 +173,7 @@ onMounted(() => {
 
 <style scoped>
 .documents-page {
-  max-width: 1200px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
@@ -162,7 +181,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
 .header-left {
@@ -172,145 +191,129 @@ onMounted(() => {
 }
 
 .page-header h2 {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
 }
 
 .doc-count {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--color-text-muted);
-  background: var(--color-bg-white);
-  padding: 4px 12px;
-  border-radius: 20px;
-  border: 1px solid var(--color-border-light);
 }
 
 .empty-state {
   text-align: center;
-  padding: 80px 40px;
+  padding: 60px 40px;
   background: var(--color-bg-white);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
 }
 
 .empty-icon {
-  font-size: 64px;
-  margin-bottom: 24px;
+  color: var(--color-text-muted);
+  margin-bottom: 16px;
 }
 
 .empty-state h3 {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
 }
 
 .empty-state p {
   font-size: 14px;
   color: var(--color-text-muted);
-  margin: 0 0 24px 0;
+  margin: 0 0 20px 0;
 }
 
-.document-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-}
-
-.document-card {
-  background: var(--color-bg-white);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-border-light);
-  cursor: pointer;
-  transition: all 0.25s ease;
-  overflow: hidden;
-}
-
-.document-card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-4px);
-  border-color: var(--color-primary);
-}
-
-.card-header {
+.document-list {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 16px 16px 0 16px;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.card-icon {
-  font-size: 32px;
+.document-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--color-bg-white);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border: 1px solid transparent;
 }
 
-.card-actions {
+.document-item:hover {
+  background: var(--color-bg-gray);
+}
+
+.doc-icon {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.doc-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.doc-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-meta {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.doc-actions {
   display: flex;
   gap: 4px;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.15s ease;
 }
 
-.document-card:hover .card-actions {
+.document-item:hover .doc-actions {
   opacity: 1;
 }
 
 .action-btn {
-  padding: 6px 10px;
-  font-size: 12px;
-  background: var(--color-bg-gray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   cursor: pointer;
+  color: var(--color-text-muted);
   transition: all 0.15s ease;
-  color: var(--color-text-secondary);
 }
 
 .action-btn:hover {
   background: var(--color-bg-hover);
-}
-
-.action-btn.danger {
-  color: var(--color-danger);
+  color: var(--color-text-primary);
 }
 
 .action-btn.danger:hover {
-  background: var(--color-danger-light);
-}
-
-.card-body {
-  padding: 12px 16px 20px 16px;
-}
-
-.card-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  margin: 0 0 12px 0;
-  line-height: 1.4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.card-meta {
-  display: flex;
-  gap: 16px;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--color-text-muted);
+  background: #fff1f0;
+  color: #ff3b30;
 }
 
 .share-desc {
   color: var(--color-text-secondary);
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+  font-size: 14px;
 }
 
 .share-link-container {
@@ -326,13 +329,14 @@ onMounted(() => {
 }
 
 .copy-success {
-  color: var(--color-success) !important;
-  margin-top: 12px !important;
-  font-weight: 500;
+  color: #34c759;
+  margin-top: 10px;
+  font-size: 13px;
 }
 
 .delete-warning {
   color: var(--color-text-secondary);
   line-height: 1.6;
+  font-size: 14px;
 }
 </style>

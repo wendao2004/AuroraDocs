@@ -2,7 +2,7 @@
   <div class="team-page">
     <div class="page-header">
       <div class="header-left">
-        <h2>👥 团队管理</h2>
+        <h2>团队</h2>
         <span class="team-count">{{ teams.length }} 个团队</span>
       </div>
       <button class="btn btn-primary" @click="showCreateDialog = true">
@@ -11,7 +11,14 @@
     </div>
 
     <div v-if="teams.length === 0" class="empty-state">
-      <div class="empty-icon">👥</div>
+      <div class="empty-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
       <h3>创建你的团队</h3>
       <p>邀请成员，协作管理知识文档</p>
       <button class="btn btn-primary" @click="showCreateDialog = true">创建第一个团队</button>
@@ -22,27 +29,25 @@
         <div
           v-for="team in teams"
           :key="team.id"
-          class="team-card"
+          class="team-item"
           :class="{ active: selectedTeamId === team.id }"
           @click="selectTeam(team.id)"
         >
           <div class="team-avatar">{{ team.name.charAt(0) }}</div>
           <div class="team-info">
             <div class="team-name">{{ team.name }}</div>
-            <div class="team-members-count">团队成员</div>
+            <div class="team-desc">{{ team.description || '暂无描述' }}</div>
           </div>
         </div>
       </div>
 
       <div v-if="selectedTeam" class="team-detail">
         <div class="detail-header">
-          <div class="detail-info">
-            <div class="detail-title">
-              <div class="detail-avatar">{{ selectedTeam.name.charAt(0) }}</div>
-              <div>
-                <h3>{{ selectedTeam.name }}</h3>
-                <p>{{ selectedTeam.description || '暂无描述' }}</p>
-              </div>
+          <div class="detail-title">
+            <div class="detail-avatar">{{ selectedTeam.name.charAt(0) }}</div>
+            <div>
+              <h3>{{ selectedTeam.name }}</h3>
+              <p>{{ selectedTeam.description || '暂无描述' }}</p>
             </div>
           </div>
           <button class="btn btn-secondary" @click="showAddMemberDialog = true">
@@ -62,15 +67,12 @@
                 <div class="member-name">{{ member.userName }}</div>
                 <div class="member-email">{{ member.userEmail }}</div>
               </div>
-              <span
-                class="role-badge"
-                :class="member.role"
-              >
+              <span class="role-badge" :class="member.role">
                 {{ TeamRoleLabels[member.role] }}
               </span>
               <button
                 v-if="member.role !== 'owner'"
-                class="action-btn danger"
+                class="remove-btn"
                 @click="handleRemoveMember(member.id)"
               >
                 移除
@@ -84,7 +86,7 @@
     <div v-if="showCreateDialog" class="dialog-overlay" @click.self="showCreateDialog = false">
       <div class="dialog">
         <div class="dialog-header">
-          <h3>✨ 创建团队</h3>
+          <h3>创建团队</h3>
           <button class="close-btn" @click="showCreateDialog = false">×</button>
         </div>
         <div class="dialog-content">
@@ -109,7 +111,7 @@
     <div v-if="showAddMemberDialog" class="dialog-overlay" @click.self="showAddMemberDialog = false">
       <div class="dialog">
         <div class="dialog-header">
-          <h3>👤 添加成员</h3>
+          <h3>添加成员</h3>
           <button class="close-btn" @click="showAddMemberDialog = false">×</button>
         </div>
         <div class="dialog-content">
@@ -211,7 +213,7 @@ onMounted(() => {
 
 <style scoped>
 .team-page {
-  max-width: 1200px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
@@ -219,7 +221,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
 .header-left {
@@ -229,51 +231,46 @@ onMounted(() => {
 }
 
 .page-header h2 {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
 }
 
 .team-count {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--color-text-muted);
-  background: var(--color-bg-white);
-  padding: 4px 12px;
-  border-radius: 20px;
-  border: 1px solid var(--color-border-light);
 }
 
 .empty-state {
   text-align: center;
-  padding: 80px 40px;
+  padding: 60px 40px;
   background: var(--color-bg-white);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
 }
 
 .empty-icon {
-  font-size: 64px;
-  margin-bottom: 24px;
+  color: var(--color-text-muted);
+  margin-bottom: 16px;
 }
 
 .empty-state h3 {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
 }
 
 .empty-state p {
   font-size: 14px;
   color: var(--color-text-muted);
-  margin: 0 0 24px 0;
+  margin: 0 0 20px 0;
 }
 
 .team-content {
   display: flex;
   gap: 24px;
-  min-height: 500px;
 }
 
 .team-list {
@@ -281,141 +278,145 @@ onMounted(() => {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 2px;
 }
 
-.team-card {
+.team-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px;
+  padding: 12px 14px;
   background: var(--color-bg-white);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.15s ease;
+  border: 1px solid transparent;
 }
 
-.team-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateX(4px);
+.team-item:hover {
+  background: var(--color-bg-gray);
 }
 
-.team-card.active {
-  border-color: var(--color-primary);
+.team-item.active {
   background: var(--color-primary-light);
+  border-color: var(--color-primary);
 }
 
 .team-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, #0078d4 0%, #006cbd 100%);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  font-weight: 700;
-  box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
+  font-size: 16px;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 .team-info {
   flex: 1;
+  min-width: 0;
 }
 
 .team-name {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--color-text-primary);
-  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.team-members-count {
+.team-desc {
   font-size: 12px;
   color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .team-detail {
   flex: 1;
   background: var(--color-bg-white);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-md);
-  padding: 28px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
+  padding: 24px;
 }
 
 .detail-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 32px;
-  padding-bottom: 24px;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
   border-bottom: 1px solid var(--color-border-light);
 }
 
 .detail-title {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .detail-avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, #0078d4 0%, #006cbd 100%);
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
-  font-weight: 700;
-  box-shadow: 0 4px 16px rgba(0, 120, 212, 0.3);
+  font-size: 20px;
+  font-weight: 600;
 }
 
 .detail-info h3 {
-  font-size: 22px;
-  font-weight: 700;
-  margin: 0 0 6px 0;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
   color: var(--color-text-primary);
 }
 
 .detail-info p {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--color-text-muted);
   margin: 0;
 }
 
 .member-section h4 {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
-  margin: 0 0 20px 0;
+  margin: 0 0 16px 0;
   color: var(--color-text-primary);
 }
 
 .empty-members {
   text-align: center;
-  padding: 40px;
+  padding: 32px;
   background: var(--color-bg-gray);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-sm);
   color: var(--color-text-muted);
+  font-size: 14px;
 }
 
 .member-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 2px;
 }
 
 .member-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px;
+  padding: 10px 12px;
   background: var(--color-bg-gray);
-  border-radius: var(--radius-lg);
-  transition: all 0.2s ease;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s ease;
 }
 
 .member-item:hover {
@@ -423,27 +424,28 @@ onMounted(() => {
 }
 
 .member-avatar {
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .member-info {
   flex: 1;
+  min-width: 0;
 }
 
 .member-name {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-text-primary);
-  margin-bottom: 2px;
 }
 
 .member-email {
@@ -452,39 +454,36 @@ onMounted(() => {
 }
 
 .role-badge {
-  padding: 4px 12px;
-  font-size: 12px;
+  padding: 2px 8px;
+  font-size: 11px;
   font-weight: 500;
-  border-radius: 20px;
+  border-radius: 4px;
   color: white;
 }
 
-.role-badge.owner { background: #722ed1; }
-.role-badge.admin { background: #1890ff; }
-.role-badge.member { background: #52c41a; }
+.role-badge.owner { background: #764ba2; }
+.role-badge.admin { background: #007aff; }
+.role-badge.member { background: #34c759; }
 
-.action-btn {
-  padding: 6px 12px;
+.remove-btn {
+  padding: 4px 10px;
   font-size: 12px;
-  background: var(--color-bg-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
+  color: var(--color-text-muted);
+  opacity: 0;
   transition: all 0.15s ease;
-  color: var(--color-text-secondary);
 }
 
-.action-btn:hover {
-  background: var(--color-bg-hover);
+.member-item:hover .remove-btn {
+  opacity: 1;
 }
 
-.action-btn.danger {
-  color: var(--color-danger);
-  border-color: var(--color-danger);
-}
-
-.action-btn.danger:hover {
-  background: var(--color-danger-light);
+.remove-btn:hover {
+  background: #fff1f0;
+  color: #ff3b30;
 }
 
 .textarea {
