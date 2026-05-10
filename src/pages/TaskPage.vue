@@ -1,22 +1,36 @@
 <template>
   <div class="task-page">
     <div class="page-header">
-      <h2>任务管理</h2>
-      <button class="btn btn-primary" @click="showCreateDialog = true">创建任务</button>
+      <div class="header-left">
+        <h2>✅ 任务管理</h2>
+        <span class="task-count">{{ tasks.length }} 个任务</span>
+      </div>
+      <button class="btn btn-primary" @click="showCreateDialog = true">
+        <span>+</span> 创建任务
+      </button>
     </div>
 
     <div class="task-stats">
-      <div class="stat-card">
-        <div class="stat-number">{{ taskStats.pending }}</div>
-        <div class="stat-label">待处理</div>
+      <div class="stat-card pending">
+        <div class="stat-icon">📋</div>
+        <div class="stat-info">
+          <div class="stat-number">{{ taskStats.pending }}</div>
+          <div class="stat-label">待处理</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-number">{{ taskStats.in_progress }}</div>
-        <div class="stat-label">进行中</div>
+      <div class="stat-card in-progress">
+        <div class="stat-icon">🔄</div>
+        <div class="stat-info">
+          <div class="stat-number">{{ taskStats.in_progress }}</div>
+          <div class="stat-label">进行中</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-number">{{ taskStats.completed }}</div>
-        <div class="stat-label">已完成</div>
+      <div class="stat-card completed">
+        <div class="stat-icon">✨</div>
+        <div class="stat-info">
+          <div class="stat-number">{{ taskStats.completed }}</div>
+          <div class="stat-label">已完成</div>
+        </div>
       </div>
     </div>
 
@@ -33,8 +47,10 @@
     </div>
 
     <div v-if="filteredTasks.length === 0" class="empty-state">
-      <p>暂无任务</p>
-      <button class="btn btn-secondary" @click="showCreateDialog = true">创建第一个任务</button>
+      <div class="empty-icon">📋</div>
+      <h3>暂无任务</h3>
+      <p>创建任务，开始你的 productivity</p>
+      <button class="btn btn-primary" @click="showCreateDialog = true">创建第一个任务</button>
     </div>
 
     <div v-else class="task-list">
@@ -42,37 +58,40 @@
         v-for="task in filteredTasks"
         :key="task.id"
         class="task-item"
-        @click="handleEditTask(task.id)"
+        :class="{ completed: task.status === 'completed' }"
       >
         <div class="task-checkbox" @click.stop>
-          <input
-            type="checkbox"
-            :checked="task.status === 'completed'"
-            @change="toggleTaskStatus(task.id, task.status)"
-          />
+          <label class="checkbox-wrapper">
+            <input
+              type="checkbox"
+              :checked="task.status === 'completed'"
+              @change="toggleTaskStatus(task.id, task.status)"
+            />
+            <span class="checkmark"></span>
+          </label>
         </div>
-        <div class="task-content">
+        <div class="task-content" @click="handleEditTask(task.id)">
           <div class="task-title">{{ task.title }}</div>
           <div class="task-meta">
             <span
-              class="task-priority"
-              :style="{ backgroundColor: TaskPriorityColors[task.priority] }"
+              class="priority-badge"
+              :class="task.priority"
             >
               {{ TaskPriorityLabels[task.priority] }}
             </span>
             <span
-              class="task-status"
-              :style="{ backgroundColor: TaskStatusColors[task.status] }"
+              class="status-badge"
+              :class="task.status"
             >
               {{ TaskStatusLabels[task.status] }}
             </span>
-            <span v-if="task.dueDate" class="task-due">
-              截止：{{ formatDate(task.dueDate) }}
+            <span v-if="task.dueDate" class="due-date">
+              🗓 {{ formatDate(task.dueDate) }}
             </span>
           </div>
         </div>
         <div class="task-actions" @click.stop>
-          <button class="icon-btn delete" @click="handleDelete(task.id)">删除</button>
+          <button class="action-btn danger" @click="handleDelete(task.id)">删除</button>
         </div>
       </div>
     </div>
@@ -80,35 +99,30 @@
     <div v-if="showCreateDialog" class="dialog-overlay" @click.self="closeCreateDialog">
       <div class="dialog">
         <div class="dialog-header">
-          <h3>{{ editingTaskId ? '编辑任务' : '创建任务' }}</h3>
+          <h3>{{ editingTaskId ? '✏️ 编辑任务' : '✨ 创建任务' }}</h3>
           <button class="close-btn" @click="closeCreateDialog">×</button>
         </div>
         <div class="dialog-content">
           <div class="form-group">
             <label>任务标题</label>
-            <input v-model="taskForm.title" class="form-input" placeholder="请输入任务标题" />
+            <input v-model="taskForm.title" class="input" placeholder="输入任务标题..." />
           </div>
           <div class="form-group">
             <label>任务描述</label>
-            <textarea
-              v-model="taskForm.description"
-              class="form-textarea"
-              placeholder="请输入任务描述（可选）"
-              rows="3"
-            ></textarea>
+            <textarea v-model="taskForm.description" class="input textarea" placeholder="输入任务描述（可选）..." rows="3"></textarea>
           </div>
           <div class="form-row">
             <div class="form-group">
               <label>优先级</label>
-              <select v-model="taskForm.priority" class="form-select">
-                <option value="low">低</option>
-                <option value="medium">中</option>
-                <option value="high">高</option>
+              <select v-model="taskForm.priority" class="input">
+                <option value="low">🟢 低</option>
+                <option value="medium">🟡 中</option>
+                <option value="high">🔴 高</option>
               </select>
             </div>
             <div class="form-group">
               <label>截止日期</label>
-              <input v-model="taskForm.dueDate" type="date" class="form-input" />
+              <input v-model="taskForm.dueDate" type="date" class="input" />
             </div>
           </div>
           <div class="dialog-actions">
@@ -124,11 +138,11 @@
     <div v-if="showDeleteDialog" class="dialog-overlay" @click.self="showDeleteDialog = false">
       <div class="dialog">
         <div class="dialog-header">
-          <h3>确认删除</h3>
+          <h3>⚠️ 确认删除</h3>
           <button class="close-btn" @click="showDeleteDialog = false">×</button>
         </div>
         <div class="dialog-content">
-          <p>确定要删除这个任务吗？此操作不可撤销。</p>
+          <p class="delete-warning">确定要删除这个任务吗？此操作不可撤销。</p>
           <div class="dialog-actions">
             <button class="btn btn-secondary" @click="showDeleteDialog = false">取消</button>
             <button class="btn btn-danger" @click="confirmDelete">删除</button>
@@ -145,8 +159,6 @@ import { taskService } from '../services/storage/taskService'
 import {
   TaskStatusLabels,
   TaskPriorityLabels,
-  TaskPriorityColors,
-  TaskStatusColors,
 } from '../models/Task'
 import type { TaskListItem, TaskPriority, TaskStatus } from '../models/Task'
 
@@ -189,9 +201,8 @@ const filteredTasks = computed(() => {
 
 const formatDate = (date: Date) => {
   return new Date(date).toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+    month: 'short',
+    day: 'numeric',
   })
 }
 
@@ -277,131 +288,151 @@ onMounted(() => {
 
 <style scoped>
 .task-page {
-  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
+}
+
+.header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
 }
 
 .page-header h2 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #333;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary);
   margin: 0;
 }
 
-.btn {
-  padding: 8px 16px;
+.task-count {
   font-size: 14px;
-  font-weight: 500;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-primary {
-  background-color: #0078d4;
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #0066b4;
-}
-
-.btn-primary:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background-color: #f0f0f0;
-  color: #333;
-}
-
-.btn-secondary:hover {
-  background-color: #e0e0e0;
-}
-
-.btn-danger {
-  background-color: #f5222d;
-  color: white;
-}
-
-.btn-danger:hover {
-  background-color: #d91b16;
+  color: var(--color-text-muted);
+  background: var(--color-bg-white);
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--color-border-light);
 }
 
 .task-stats {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 32px;
 }
 
 .stat-card {
+  background: var(--color-bg-white);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border-light);
+  transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-icon {
+  font-size: 32px;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-gray);
+  border-radius: var(--radius-md);
+}
+
+.stat-card.pending .stat-icon { background: #fff7e6; }
+.stat-card.in-progress .stat-icon { background: #e6f7ff; }
+.stat-card.completed .stat-icon { background: #f6ffed; }
+
+.stat-info {
   flex: 1;
-  background-color: white;
-  border-radius: 8px;
-  padding: 20px;
-  text-align: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .stat-number {
   font-size: 32px;
-  font-weight: 600;
-  color: #333;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1;
 }
 
 .stat-label {
   font-size: 14px;
-  color: #666;
-  margin-top: 8px;
+  color: var(--color-text-muted);
+  margin-top: 4px;
 }
 
 .task-filter {
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  background: var(--color-bg-white);
+  padding: 8px;
+  border-radius: var(--radius-lg);
+  width: fit-content;
 }
 
 .filter-btn {
-  padding: 8px 16px;
+  padding: 10px 20px;
   font-size: 14px;
-  background-color: white;
-  border: 1px solid #d0d0d0;
-  border-radius: 4px;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.15s ease;
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
 }
 
 .filter-btn:hover {
-  border-color: #0078d4;
-  color: #0078d4;
+  background: var(--color-bg-gray);
+  color: var(--color-text-primary);
 }
 
 .filter-btn.active {
-  background-color: #0078d4;
+  background: var(--color-primary);
   color: white;
-  border-color: #0078d4;
 }
 
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 80px 40px;
+  background: var(--color-bg-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+}
+
+.empty-state h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 8px 0;
 }
 
 .empty-state p {
-  font-size: 16px;
-  color: #999;
-  margin-bottom: 16px;
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin: 0 0 24px 0;
 }
 
 .task-list {
@@ -413,181 +444,143 @@ onMounted(() => {
 .task-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  background-color: white;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
+  gap: 16px;
+  background: var(--color-bg-white);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border-light);
   transition: all 0.2s ease;
 }
 
 .task-item:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border);
 }
 
-.task-checkbox input {
-  width: 18px;
-  height: 18px;
+.task-item.completed .task-title {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.checkbox-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
   cursor: pointer;
+}
+
+.checkbox-wrapper input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.checkmark {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--color-border);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkbox-wrapper input:checked + .checkmark {
+  background: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.checkbox-wrapper input:checked + .checkmark::after {
+  content: '✓';
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
 }
 
 .task-content {
   flex: 1;
+  cursor: pointer;
 }
 
 .task-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
-  color: #333;
+  color: var(--color-text-primary);
   margin-bottom: 8px;
+  transition: all 0.2s ease;
 }
 
 .task-meta {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
-.task-priority,
-.task-status {
-  padding: 4px 8px;
+.priority-badge,
+.status-badge {
+  padding: 4px 10px;
   font-size: 12px;
+  font-weight: 500;
+  border-radius: 20px;
   color: white;
-  border-radius: 4px;
 }
 
-.task-due {
+.priority-badge.low { background: #52c41a; }
+.priority-badge.medium { background: #faad14; }
+.priority-badge.high { background: #f5222d; }
+
+.status-badge.pending { background: #faad14; }
+.status-badge.in_progress { background: #1890ff; }
+.status-badge.completed { background: #52c41a; }
+
+.due-date {
   font-size: 12px;
-  color: #999;
+  color: var(--color-text-muted);
 }
 
 .task-actions {
-  display: flex;
-  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
-.icon-btn {
+.task-item:hover .task-actions {
+  opacity: 1;
+}
+
+.action-btn {
   padding: 6px 12px;
   font-size: 12px;
-  background-color: #f0f0f0;
+  background: var(--color-bg-gray);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.15s ease;
+  color: var(--color-text-secondary);
 }
 
-.icon-btn:hover {
-  background-color: #e0e0e0;
+.action-btn:hover {
+  background: var(--color-bg-hover);
 }
 
-.icon-btn.delete {
-  color: #f5222d;
+.action-btn.danger {
+  color: var(--color-danger);
 }
 
-.icon-btn.delete:hover {
-  background-color: #fff1f0;
+.action-btn.danger:hover {
+  background: var(--color-danger-light);
 }
 
-.dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.dialog {
-  background-color: white;
-  border-radius: 8px;
-  width: 520px;
-  max-width: 90%;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.dialog-header h3 {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #999;
-  line-height: 1;
-}
-
-.close-btn:hover {
-  color: #333;
-}
-
-.dialog-content {
-  padding: 20px;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 8px;
-}
-
-.form-input,
-.form-textarea,
-.form-select {
-  width: 100%;
-  padding: 10px 12px;
-  font-size: 14px;
-  border: 1px solid #d0d0d0;
-  border-radius: 4px;
-  outline: none;
-  transition: border-color 0.15s ease;
-}
-
-.form-input:focus,
-.form-textarea:focus,
-.form-select:focus {
-  border-color: #0078d4;
-}
-
-.form-textarea {
+.textarea {
   resize: vertical;
+  min-height: 80px;
 }
 
-.form-row {
-  display: flex;
-  gap: 16px;
-}
-
-.form-row .form-group {
-  flex: 1;
-}
-
-.dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 20px;
+.delete-warning {
+  color: var(--color-text-secondary);
+  line-height: 1.6;
 }
 </style>
