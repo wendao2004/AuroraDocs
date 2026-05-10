@@ -12,15 +12,18 @@
   "dependencies": {
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
+    "@tiptap/extension-code-block-lowlight": "^3.23.1",
     "@tiptap/pm": "^3.23.1",
     "@tiptap/starter-kit": "^3.23.1",
     "@tiptap/vue-3": "^3.23.1",
+    "lowlight": "^3.3.0",
     "pinia": "^3.0.4",
     "vue": "^3.5.13",
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",
+    "@types/highlight.js": "^9.12.4",
     "@vitejs/plugin-vue": "^5.2.1",
     "typescript": "~5.6.2",
     "vite": "^6.0.3",

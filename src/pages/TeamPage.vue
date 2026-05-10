@@ -1,13 +1,20 @@
 <template>
   <div class="team-page">
     <div class="page-header">
-      <h2>团队管理</h2>
-      <button class="btn btn-primary" @click="showCreateDialog = true">创建团队</button>
+      <div class="header-left">
+        <h2>👥 团队管理</h2>
+        <span class="team-count">{{ teams.length }} 个团队</span>
+      </div>
+      <button class="btn btn-primary" @click="showCreateDialog = true">
+        <span>+</span> 创建团队
+      </button>
     </div>
 
     <div v-if="teams.length === 0" class="empty-state">
-      <p>暂无团队</p>
-      <button class="btn btn-secondary" @click="showCreateDialog = true">创建第一个团队</button>
+      <div class="empty-icon">👥</div>
+      <h3>创建你的团队</h3>
+      <p>邀请成员，协作管理知识文档</p>
+      <button class="btn btn-primary" @click="showCreateDialog = true">创建第一个团队</button>
     </div>
 
     <div v-else class="team-content">
@@ -19,24 +26,34 @@
           :class="{ active: selectedTeamId === team.id }"
           @click="selectTeam(team.id)"
         >
-          <div class="team-icon">{{ team.name.charAt(0) }}</div>
-          <div class="team-name">{{ team.name }}</div>
+          <div class="team-avatar">{{ team.name.charAt(0) }}</div>
+          <div class="team-info">
+            <div class="team-name">{{ team.name }}</div>
+            <div class="team-members-count">团队成员</div>
+          </div>
         </div>
       </div>
 
       <div v-if="selectedTeam" class="team-detail">
         <div class="detail-header">
           <div class="detail-info">
-            <h3>{{ selectedTeam.name }}</h3>
-            <p>{{ selectedTeam.description || '暂无描述' }}</p>
+            <div class="detail-title">
+              <div class="detail-avatar">{{ selectedTeam.name.charAt(0) }}</div>
+              <div>
+                <h3>{{ selectedTeam.name }}</h3>
+                <p>{{ selectedTeam.description || '暂无描述' }}</p>
+              </div>
+            </div>
           </div>
-          <button class="btn btn-secondary" @click="showAddMemberDialog = true">添加成员</button>
+          <button class="btn btn-secondary" @click="showAddMemberDialog = true">
+            <span>+</span> 添加成员
+          </button>
         </div>
 
         <div class="member-section">
           <h4>成员列表 ({{ members.length }})</h4>
           <div v-if="members.length === 0" class="empty-members">
-            <p>暂无成员</p>
+            <p>暂无成员，点击上方按钮添加</p>
           </div>
           <div v-else class="member-list">
             <div v-for="member in members" :key="member.id" class="member-item">
@@ -46,14 +63,14 @@
                 <div class="member-email">{{ member.userEmail }}</div>
               </div>
               <span
-                class="member-role"
-                :style="{ backgroundColor: TeamRoleColors[member.role] }"
+                class="role-badge"
+                :class="member.role"
               >
                 {{ TeamRoleLabels[member.role] }}
               </span>
               <button
                 v-if="member.role !== 'owner'"
-                class="icon-btn delete"
+                class="action-btn danger"
                 @click="handleRemoveMember(member.id)"
               >
                 移除
@@ -67,22 +84,17 @@
     <div v-if="showCreateDialog" class="dialog-overlay" @click.self="showCreateDialog = false">
       <div class="dialog">
         <div class="dialog-header">
-          <h3>创建团队</h3>
+          <h3>✨ 创建团队</h3>
           <button class="close-btn" @click="showCreateDialog = false">×</button>
         </div>
         <div class="dialog-content">
           <div class="form-group">
             <label>团队名称</label>
-            <input v-model="newTeamName" class="form-input" placeholder="请输入团队名称" />
+            <input v-model="newTeamName" class="input" placeholder="输入团队名称..." />
           </div>
           <div class="form-group">
             <label>团队描述</label>
-            <textarea
-              v-model="newTeamDescription"
-              class="form-textarea"
-              placeholder="请输入团队描述（可选）"
-              rows="3"
-            ></textarea>
+            <textarea v-model="newTeamDescription" class="input textarea" placeholder="输入团队描述（可选）..." rows="3"></textarea>
           </div>
           <div class="dialog-actions">
             <button class="btn btn-secondary" @click="showCreateDialog = false">取消</button>
@@ -97,17 +109,17 @@
     <div v-if="showAddMemberDialog" class="dialog-overlay" @click.self="showAddMemberDialog = false">
       <div class="dialog">
         <div class="dialog-header">
-          <h3>添加成员</h3>
+          <h3>👤 添加成员</h3>
           <button class="close-btn" @click="showAddMemberDialog = false">×</button>
         </div>
         <div class="dialog-content">
           <div class="form-group">
             <label>成员姓名</label>
-            <input v-model="newMemberName" class="form-input" placeholder="请输入成员姓名" />
+            <input v-model="newMemberName" class="input" placeholder="输入成员姓名..." />
           </div>
           <div class="form-group">
             <label>成员邮箱</label>
-            <input v-model="newMemberEmail" class="form-input" type="email" placeholder="请输入成员邮箱" />
+            <input v-model="newMemberEmail" class="input" type="email" placeholder="输入成员邮箱..." />
           </div>
           <div class="dialog-actions">
             <button class="btn btn-secondary" @click="showAddMemberDialog = false">取消</button>
@@ -129,7 +141,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { teamService } from '../services/storage/teamService'
 import type { Team, TeamMember } from '../models/Team'
-import { TeamRoleLabels, TeamRoleColors } from '../models/Team'
+import { TeamRoleLabels } from '../models/Team'
 
 const teams = ref<Team[]>([])
 const selectedTeamId = ref<string | null>(null)
@@ -199,162 +211,195 @@ onMounted(() => {
 
 <style scoped>
 .team-page {
-  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
+}
+
+.header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
 }
 
 .page-header h2 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #333;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary);
   margin: 0;
 }
 
-.btn {
-  padding: 8px 16px;
+.team-count {
   font-size: 14px;
-  font-weight: 500;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-primary {
-  background-color: #0078d4;
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #0066b4;
-}
-
-.btn-primary:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background-color: #f0f0f0;
-  color: #333;
-}
-
-.btn-secondary:hover {
-  background-color: #e0e0e0;
+  color: var(--color-text-muted);
+  background: var(--color-bg-white);
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--color-border-light);
 }
 
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 80px 40px;
+  background: var(--color-bg-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+}
+
+.empty-state h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 8px 0;
 }
 
 .empty-state p {
-  font-size: 16px;
-  color: #999;
-  margin-bottom: 16px;
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin: 0 0 24px 0;
 }
 
 .team-content {
   display: flex;
-  gap: 20px;
+  gap: 24px;
+  min-height: 500px;
 }
 
 .team-list {
-  width: 200px;
+  width: 280px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .team-card {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
-  background-color: white;
-  border-radius: 8px;
-  margin-bottom: 8px;
+  padding: 16px;
+  background: var(--color-bg-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 2px solid transparent;
   cursor: pointer;
-  transition: all 0.15s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
 }
 
 .team-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
+  transform: translateX(4px);
 }
 
 .team-card.active {
-  background-color: #e8f4ff;
-  border: 1px solid #0078d4;
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
 }
 
-.team-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: #0078d4;
+.team-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #0078d4 0%, #006cbd 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
+}
+
+.team-info {
+  flex: 1;
 }
 
 .team-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+.team-members-count {
+  font-size: 12px;
+  color: var(--color-text-muted);
 }
 
 .team-detail {
   flex: 1;
-  background-color: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: var(--color-bg-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  padding: 28px;
 }
 
 .detail-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.detail-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.detail-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #0078d4 0%, #006cbd 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(0, 120, 212, 0.3);
 }
 
 .detail-info h3 {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-  color: #333;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  color: var(--color-text-primary);
 }
 
 .detail-info p {
   font-size: 14px;
-  color: #666;
+  color: var(--color-text-muted);
   margin: 0;
 }
 
 .member-section h4 {
   font-size: 16px;
   font-weight: 600;
-  margin: 0 0 16px 0;
-  color: #333;
+  margin: 0 0 20px 0;
+  color: var(--color-text-primary);
 }
 
 .empty-members {
   text-align: center;
-  padding: 30px;
-  color: #999;
+  padding: 40px;
+  background: var(--color-bg-gray);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-muted);
 }
 
 .member-list {
@@ -367,21 +412,26 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
-  background-color: #f8f8f8;
-  border-radius: 8px;
+  padding: 16px;
+  background: var(--color-bg-gray);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+.member-item:hover {
+  background: var(--color-bg-hover);
 }
 
 .member-avatar {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background-color: #0078d4;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
 }
 
@@ -391,133 +441,54 @@ onMounted(() => {
 
 .member-name {
   font-size: 14px;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 4px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
 }
 
 .member-email {
   font-size: 12px;
-  color: #999;
+  color: var(--color-text-muted);
 }
 
-.member-role {
-  padding: 4px 8px;
+.role-badge {
+  padding: 4px 12px;
   font-size: 12px;
+  font-weight: 500;
+  border-radius: 20px;
   color: white;
-  border-radius: 4px;
 }
 
-.icon-btn {
+.role-badge.owner { background: #722ed1; }
+.role-badge.admin { background: #1890ff; }
+.role-badge.member { background: #52c41a; }
+
+.action-btn {
   padding: 6px 12px;
   font-size: 12px;
-  background-color: #f0f0f0;
-  border: none;
-  border-radius: 4px;
+  background: var(--color-bg-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.15s ease;
+  color: var(--color-text-secondary);
 }
 
-.icon-btn:hover {
-  background-color: #e0e0e0;
+.action-btn:hover {
+  background: var(--color-bg-hover);
 }
 
-.icon-btn.delete {
-  color: #f5222d;
+.action-btn.danger {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
 }
 
-.icon-btn.delete:hover {
-  background-color: #fff1f0;
+.action-btn.danger:hover {
+  background: var(--color-danger-light);
 }
 
-.dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.dialog {
-  background-color: white;
-  border-radius: 8px;
-  width: 480px;
-  max-width: 90%;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.dialog-header h3 {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #999;
-  line-height: 1;
-}
-
-.close-btn:hover {
-  color: #333;
-}
-
-.dialog-content {
-  padding: 20px;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 8px;
-}
-
-.form-input,
-.form-textarea {
-  width: 100%;
-  padding: 10px 12px;
-  font-size: 14px;
-  border: 1px solid #d0d0d0;
-  border-radius: 4px;
-  outline: none;
-  transition: border-color 0.15s ease;
-}
-
-.form-input:focus,
-.form-textarea:focus {
-  border-color: #0078d4;
-}
-
-.form-textarea {
+.textarea {
   resize: vertical;
-}
-
-.dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 20px;
+  min-height: 80px;
 }
 </style>
