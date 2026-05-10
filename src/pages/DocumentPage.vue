@@ -1,54 +1,73 @@
 <template>
   <div class="documents-page">
     <div class="page-header">
-      <h2>文档管理</h2>
-      <button class="btn btn-primary" @click="handleCreate">新建文档</button>
+      <div class="header-left">
+        <h2>📁 文档管理</h2>
+        <span class="doc-count">{{ documents.length }} 个文档</span>
+      </div>
+      <button class="btn btn-primary" @click="handleCreate">
+        <span>+</span> 新建文档
+      </button>
     </div>
+
     <div v-if="documents.length === 0" class="empty-state">
-      <p>暂无文档</p>
-      <button class="btn btn-secondary" @click="handleCreate">创建第一个文档</button>
+      <div class="empty-icon">📝</div>
+      <h3>开始创作</h3>
+      <p>创建你的第一个文档，开启知识管理之旅</p>
+      <button class="btn btn-primary" @click="handleCreate">创建第一个文档</button>
     </div>
-    <div v-else class="document-list">
+
+    <div v-else class="document-grid">
       <div
         v-for="doc in documents"
         :key="doc.id"
-        class="document-item"
+        class="document-card"
         @click="handleEdit(doc.id)"
       >
-        <div class="document-info">
-          <div class="document-title">{{ doc.title }}</div>
-          <div class="document-meta">更新于 {{ formatDate(doc.updatedAt) }}</div>
+        <div class="card-header">
+          <div class="card-icon">📄</div>
+          <div class="card-actions" @click.stop>
+            <button class="action-btn" title="分享" @click="handleShare(doc.id)">分享</button>
+            <button class="action-btn danger" title="删除" @click="handleDelete(doc.id)">删除</button>
+          </div>
         </div>
-        <div class="document-actions" @click.stop>
-          <button class="icon-btn" title="分享" @click="handleShare(doc.id)">分享</button>
-          <button class="icon-btn delete" title="删除" @click="handleDelete(doc.id)">删除</button>
+        <div class="card-body">
+          <h4 class="card-title">{{ doc.title || '无标题文档' }}</h4>
+          <div class="card-meta">
+            <span class="meta-item">
+              <span class="meta-icon">🕐</span>
+              {{ formatDate(doc.updatedAt) }}
+            </span>
+          </div>
         </div>
       </div>
     </div>
+
     <div v-if="showShareDialog" class="dialog-overlay" @click.self="showShareDialog = false">
       <div class="dialog">
         <div class="dialog-header">
-          <h3>分享文档</h3>
+          <h3>🔗 分享文档</h3>
           <button class="close-btn" @click="showShareDialog = false">×</button>
         </div>
         <div class="dialog-content">
-          <p>复制以下链接分享给其他人：</p>
+          <p class="share-desc">复制以下链接分享给其他人：</p>
           <div class="share-link-container">
-            <input v-model="shareLink" readonly class="share-link-input" />
+            <input v-model="shareLink" readonly class="input share-link-input" />
             <button class="btn btn-primary" @click="copyLink">复制</button>
           </div>
-          <p v-if="copySuccess" class="copy-success">复制成功！</p>
+          <p v-if="copySuccess" class="copy-success">✓ 复制成功！</p>
         </div>
       </div>
     </div>
+
     <div v-if="showDeleteDialog" class="dialog-overlay" @click.self="showDeleteDialog = false">
       <div class="dialog">
         <div class="dialog-header">
-          <h3>确认删除</h3>
+          <h3>⚠️ 确认删除</h3>
           <button class="close-btn" @click="showDeleteDialog = false">×</button>
         </div>
         <div class="dialog-content">
-          <p>确定要删除这个文档吗？此操作不可撤销。</p>
+          <p class="delete-warning">确定要删除这个文档吗？此操作不可撤销。</p>
           <div class="dialog-actions">
             <button class="btn btn-secondary" @click="showDeleteDialog = false">取消</button>
             <button class="btn btn-danger" @click="confirmDelete">删除</button>
@@ -75,13 +94,15 @@ const copySuccess = ref(false)
 const deleteTargetId = ref<string | null>(null)
 
 const formatDate = (date: Date) => {
-  return new Date(date).toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  const d = new Date(date)
+  const now = new Date()
+  const diff = now.getTime() - d.getTime()
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+
+  if (days === 0) return '今天 ' + d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+  if (days === 1) return '昨天'
+  if (days < 7) return `${days} 天前`
+  return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 }
 
 const loadDocuments = () => {
@@ -133,195 +154,163 @@ onMounted(() => {
 
 <style scoped>
 .documents-page {
-  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
+}
+
+.header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
 }
 
 .page-header h2 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #333;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary);
   margin: 0;
 }
 
-.btn {
-  padding: 8px 16px;
+.doc-count {
   font-size: 14px;
-  font-weight: 500;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-primary {
-  background-color: #0078d4;
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #0066b4;
-}
-
-.btn-secondary {
-  background-color: #f0f0f0;
-  color: #333;
-}
-
-.btn-secondary:hover {
-  background-color: #e0e0e0;
-}
-
-.btn-danger {
-  background-color: #f5222d;
-  color: white;
-}
-
-.btn-danger:hover {
-  background-color: #d91b16;
+  color: var(--color-text-muted);
+  background: var(--color-bg-white);
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--color-border-light);
 }
 
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 80px 40px;
+  background: var(--color-bg-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+}
+
+.empty-state h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 8px 0;
 }
 
 .empty-state p {
-  font-size: 16px;
-  color: #999;
-  margin-bottom: 16px;
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin: 0 0 24px 0;
 }
 
-.document-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.document-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
 }
 
-.document-item {
+.document-card {
+  background: var(--color-bg-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border-light);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  overflow: hidden;
+}
+
+.document-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+  border-color: var(--color-primary);
+}
+
+.card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  background-color: white;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: all 0.2s ease;
+  align-items: flex-start;
+  padding: 16px 16px 0 16px;
 }
 
-.document-item:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+.card-icon {
+  font-size: 32px;
 }
 
-.document-info {
-  flex: 1;
-}
-
-.document-title {
-  font-size: 16px;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 8px;
-}
-
-.document-meta {
-  font-size: 12px;
-  color: #999;
-}
-
-.document-actions {
+.card-actions {
   display: flex;
-  gap: 8px;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
-.icon-btn {
-  padding: 6px 12px;
+.document-card:hover .card-actions {
+  opacity: 1;
+}
+
+.action-btn {
+  padding: 6px 10px;
   font-size: 12px;
-  background-color: #f0f0f0;
+  background: var(--color-bg-gray);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.15s ease;
+  color: var(--color-text-secondary);
 }
 
-.icon-btn:hover {
-  background-color: #e0e0e0;
+.action-btn:hover {
+  background: var(--color-bg-hover);
 }
 
-.icon-btn.delete {
-  color: #f5222d;
+.action-btn.danger {
+  color: var(--color-danger);
 }
 
-.icon-btn.delete:hover {
-  background-color: #fff1f0;
+.action-btn.danger:hover {
+  background: var(--color-danger-light);
 }
 
-.dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+.card-body {
+  padding: 12px 16px 20px 16px;
 }
 
-.dialog {
-  background-color: white;
-  border-radius: 8px;
-  width: 480px;
-  max-width: 90%;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.dialog-header h3 {
+.card-title {
   font-size: 16px;
   font-weight: 600;
-  margin: 0;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #999;
-  line-height: 1;
-}
-
-.close-btn:hover {
-  color: #333;
-}
-
-.dialog-content {
-  padding: 20px;
-}
-
-.dialog-content p {
+  color: var(--color-text-primary);
   margin: 0 0 12px 0;
-  font-size: 14px;
-  color: #666;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-meta {
+  display: flex;
+  gap: 16px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.share-desc {
+  color: var(--color-text-secondary);
+  margin-bottom: 16px;
 }
 
 .share-link-container {
@@ -331,22 +320,19 @@ onMounted(() => {
 
 .share-link-input {
   flex: 1;
-  padding: 10px 12px;
-  font-size: 14px;
-  border: 1px solid #d0d0d0;
-  border-radius: 4px;
-  background-color: #f8f8f8;
+  background: var(--color-bg-gray);
+  font-family: var(--font-mono);
+  font-size: 13px;
 }
 
 .copy-success {
-  color: #52c41a !important;
-  margin-top: 8px !important;
+  color: var(--color-success) !important;
+  margin-top: 12px !important;
+  font-weight: 500;
 }
 
-.dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 16px;
+.delete-warning {
+  color: var(--color-text-secondary);
+  line-height: 1.6;
 }
 </style>
