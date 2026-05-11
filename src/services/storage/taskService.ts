@@ -1,4 +1,5 @@
 import { storage, STORAGE_KEYS } from '../storage/localStorage'
+import { teamService } from './teamService'
 import type { Task, TaskListItem, TaskStatus, TaskPriority } from '../../models/Task'
 
 function generateId(): string {
@@ -13,6 +14,12 @@ function saveTasks(tasks: Task[]): void {
   storage.set(STORAGE_KEYS.TASKS, tasks)
 }
 
+function getAssigneeName(assigneeId: string | null): string | null {
+  if (!assigneeId) return null
+  const member = teamService.getMemberById(assigneeId)
+  return member?.userName || null
+}
+
 export const taskService = {
   getAll(): TaskListItem[] {
     const tasks = getTasks()
@@ -21,7 +28,7 @@ export const taskService = {
       title: task.title,
       status: task.status,
       priority: task.priority,
-      assigneeName: null,
+      assigneeName: getAssigneeName(task.assigneeId),
       dueDate: task.dueDate ? new Date(task.dueDate) : null,
     }))
   },
@@ -97,7 +104,21 @@ export const taskService = {
         title: task.title,
         status: task.status,
         priority: task.priority,
-        assigneeName: null,
+        assigneeName: getAssigneeName(task.assigneeId),
+        dueDate: task.dueDate ? new Date(task.dueDate) : null,
+      }))
+  },
+
+  getByAssignee(assigneeId: string | null): TaskListItem[] {
+    const tasks = getTasks()
+    return tasks
+      .filter((task) => task.assigneeId === assigneeId)
+      .map((task) => ({
+        id: task.id,
+        title: task.title,
+        status: task.status,
+        priority: task.priority,
+        assigneeName: getAssigneeName(task.assigneeId),
         dueDate: task.dueDate ? new Date(task.dueDate) : null,
       }))
   },

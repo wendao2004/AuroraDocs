@@ -10,9 +10,38 @@
           </svg>
         </button>
       </div>
+      
+      <div class="category-section" v-if="categories.length > 0">
+        <div class="category-header">
+          <span class="category-label">分类</span>
+          <button class="manage-categories-btn" @click="showCategoryManager = true">管理</button>
+        </div>
+        <div class="category-list">
+          <div 
+            class="category-item" 
+            :class="{ active: selectedCategoryId === '' }"
+            @click="selectCategory('')"
+          >
+            <span>全部</span>
+            <span class="category-count">{{ documents.length }}</span>
+          </div>
+          <div 
+            v-for="cat in categories" 
+            :key="cat.id"
+            class="category-item" 
+            :class="{ active: selectedCategoryId === cat.id }"
+            @click="selectCategory(cat.id)"
+          >
+            <span class="category-color" :style="{ backgroundColor: cat.color }"></span>
+            <span>{{ cat.name }}</span>
+            <span class="category-count">{{ getDocumentsByCategory(cat.id).length }}</span>
+          </div>
+        </div>
+      </div>
+      
       <div class="file-tree">
         <div
-          v-for="doc in documents"
+          v-for="doc in filteredDocuments"
           :key="doc.id"
           class="file-item"
           :class="{ active: currentDocumentId === doc.id }"
@@ -29,6 +58,9 @@
               <line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
+        </div>
+        <div v-if="filteredDocuments.length === 0 && documents.length > 0" class="empty-tree">
+          <p>该分类下暂无文档</p>
         </div>
         <div v-if="documents.length === 0" class="empty-tree">
           <p>暂无文档</p>
@@ -64,7 +96,6 @@
         >
           <svg class="tab-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
           </svg>
           <span class="tab-name">{{ tab.title || '无标题' }}</span>
           <button class="tab-close" @click.stop="closeDocument(tab.id)">
@@ -85,6 +116,57 @@
             @input="saveDocument()"
           />
           <div class="toolbar-actions">
+            <div class="toolbar-dropdown" v-if="currentDocumentId">
+              <button class="toolbar-btn" title="分类">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z"/>
+                </svg>
+              </button>
+              <div class="dropdown-menu category-dropdown">
+                <div class="dropdown-item" :class="{ active: !getCurrentDocumentCategory() }" @click="setDocumentCategory(null)">
+                  无分类
+                </div>
+                <div 
+                  v-for="cat in categories" 
+                  :key="cat.id"
+                  class="dropdown-item" 
+                  :class="{ active: getCurrentDocumentCategory()?.id === cat.id }"
+                  @click="setDocumentCategory(cat.id)"
+                >
+                  <span class="category-color" :style="{ backgroundColor: cat.color }"></span>
+                  {{ cat.name }}
+                </div>
+              </div>
+            </div>
+            
+            <div class="toolbar-dropdown tags-dropdown" v-if="currentDocumentId">
+              <button class="toolbar-btn" title="标签">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+              </button>
+              <div class="dropdown-menu">
+                <div 
+                  v-for="tag in tags" 
+                  :key="tag.id"
+                  class="dropdown-item"
+                  @click="toggleDocumentTag(tag.id)"
+                >
+                  <span class="tag-checkbox" :class="{ checked: getCurrentDocumentTags().includes(tag.id) }">
+                    <svg v-if="getCurrentDocumentTags().includes(tag.id)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  </span>
+                  <span class="tag-color" :style="{ backgroundColor: tag.color }"></span>
+                  {{ tag.name }}
+                </div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" @click="showTagManager = true">
+                  管理标签
+                </div>
+              </div>
+            </div>
+            
             <button
               class="toolbar-btn"
               @click="createVersion"
@@ -137,6 +219,7 @@
             <polyline points="14 2 14 8 20 8"/>
             <line x1="16" y1="13" x2="8" y2="13"/>
             <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
           </svg>
         </div>
         <h3>选择一个文档开始编辑</h3>
@@ -219,6 +302,54 @@
       </div>
     </aside>
 
+    <div v-if="showCategoryManager" class="dialog-overlay" @click.self="showCategoryManager = false">
+      <div class="dialog category-dialog">
+        <div class="dialog-header">
+          <h3>管理分类</h3>
+          <button class="close-btn" @click="showCategoryManager = false">×</button>
+        </div>
+        <div class="dialog-content">
+          <div class="category-form">
+            <input v-model="newCategoryName" class="input" placeholder="分类名称" />
+            <input v-model="newCategoryColor" type="color" class="color-input" />
+            <button class="btn btn-primary" @click="addCategory">添加</button>
+          </div>
+          <div class="category-list-dialog">
+            <div v-for="cat in categories" :key="cat.id" class="category-item-dialog">
+              <span class="category-color" :style="{ backgroundColor: cat.color }"></span>
+              <input v-model="cat.name" class="input category-name-input" @input="updateCategory(cat)" />
+              <input v-model="cat.color" type="color" class="color-input-small" @input="updateCategory(cat)" />
+              <button class="btn btn-danger btn-sm" @click="deleteCategory(cat.id)">删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showTagManager" class="dialog-overlay" @click.self="showTagManager = false">
+      <div class="dialog tag-dialog">
+        <div class="dialog-header">
+          <h3>管理标签</h3>
+          <button class="close-btn" @click="showTagManager = false">×</button>
+        </div>
+        <div class="dialog-content">
+          <div class="tag-form">
+            <input v-model="newTagName" class="input" placeholder="标签名称" />
+            <input v-model="newTagColor" type="color" class="color-input" />
+            <button class="btn btn-primary" @click="addTag">添加</button>
+          </div>
+          <div class="tag-list-dialog">
+            <div v-for="tag in tags" :key="tag.id" class="tag-item-dialog">
+              <span class="tag-color" :style="{ backgroundColor: tag.color }"></span>
+              <input v-model="tag.name" class="input tag-name-input" @input="updateTag(tag)" />
+              <input v-model="tag.color" type="color" class="color-input-small" @input="updateTag(tag)" />
+              <button class="btn btn-danger btn-sm" @click="deleteTag(tag.id)">删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div v-if="showSettingsDialog" class="dialog-overlay" @click.self="showSettingsDialog = false">
       <div class="dialog settings-dialog">
         <div class="dialog-header">
@@ -247,7 +378,7 @@
                 <div class="setting-label">用户名</div>
                 <div class="setting-desc">显示在侧边栏的用户名称</div>
               </div>
-              <input v-model="userName" class="input setting-input" @change="saveUserName" />
+              <input v-model="userName" class="input setting-input" @input="saveUserName" />
             </div>
           </div>
 
@@ -286,10 +417,12 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import TiptapEditor from '../editor/TiptapEditor.vue'
 import { documentService } from '../../services/storage/documentService'
+import { categoryService } from '../../services/storage/categoryService'
+import { tagService } from '../../services/storage/tagService'
 import { documentVersionService, type DocumentVersion } from '../../services/storage/documentVersionService'
 import { shareService } from '../../services/shareService'
 import { useSettingsStore } from '../../stores/settingsStore'
-import type { DocumentListItem } from '../../models/Document'
+import type { DocumentListItem, Category, Tag } from '../../models/Document'
 
 const settingsStore = useSettingsStore()
 
@@ -297,14 +430,21 @@ interface OpenDocument {
   id: string
   title: string
   content: string
+  categoryId: string | null
+  tags: string[]
 }
 
 const documents = ref<DocumentListItem[]>([])
+const categories = ref<Category[]>([])
+const tags = ref<Tag[]>([])
 const openDocuments = ref<OpenDocument[]>([])
 const currentDocumentId = ref<string | null>(null)
+const selectedCategoryId = ref<string>('')
 const showSettingsDialog = ref(false)
 const showShareDialog = ref(false)
 const showHistoryPanel = ref(false)
+const showCategoryManager = ref(false)
+const showTagManager = ref(false)
 const versions = ref<DocumentVersion[]>([])
 const selectedVersionId = ref<string | null>(null)
 const versionDiff = ref<{ lines: string[], titleDiff: boolean } | null>(null)
@@ -316,13 +456,44 @@ const userName = ref('用户')
 const autoSaveTimer = ref<ReturnType<typeof setTimeout> | null>(null)
 const lastSavedContent = ref('')
 const lastSavedTitle = ref('')
+const lastSavedCategoryId = ref('')
+const lastSavedTags = ref<string[]>([])
+const newCategoryName = ref('')
+const newCategoryColor = ref('#1890ff')
+const newTagName = ref('')
+const newTagColor = ref('#52c759')
 
 const currentDocument = computed(() => {
   return openDocuments.value.find((doc) => doc.id === currentDocumentId.value) || null
 })
 
+const filteredDocuments = computed(() => {
+  if (!selectedCategoryId.value) {
+    return documents.value
+  }
+  return documents.value.filter(doc => doc.categoryId === selectedCategoryId.value)
+})
+
+const getDocumentsByCategory = (categoryId: string) => {
+  return documents.value.filter(doc => doc.categoryId === categoryId)
+}
+
+const getCurrentDocumentCategory = () => {
+  if (!currentDocument.value) return null
+  return categories.value.find(cat => cat.id === currentDocument.value?.categoryId) || null
+}
+
+const getCurrentDocumentTags = () => {
+  return currentDocument.value?.tags || []
+}
+
 const loadDocuments = () => {
   documents.value = documentService.getAll()
+}
+
+const loadCategoriesAndTags = () => {
+  categories.value = categoryService.getAll()
+  tags.value = tagService.getAll()
 }
 
 const loadUserName = () => {
@@ -336,8 +507,70 @@ const saveUserName = () => {
   localStorage.setItem('userName', userName.value)
 }
 
+const selectCategory = (categoryId: string) => {
+  selectedCategoryId.value = categoryId
+}
+
+const addCategory = () => {
+  if (newCategoryName.value.trim()) {
+    categoryService.create(newCategoryName.value.trim(), newCategoryColor.value)
+    categories.value = categoryService.getAll()
+    newCategoryName.value = ''
+  }
+}
+
+const updateCategory = (category: Category) => {
+  categoryService.update(category.id, { name: category.name, color: category.color })
+}
+
+const deleteCategory = (categoryId: string) => {
+  categoryService.delete(categoryId)
+  categories.value = categoryService.getAll()
+  if (selectedCategoryId.value === categoryId) {
+    selectedCategoryId.value = ''
+  }
+}
+
+const addTag = () => {
+  if (newTagName.value.trim()) {
+    tagService.create(newTagName.value.trim(), newTagColor.value)
+    tags.value = tagService.getAll()
+    newTagName.value = ''
+  }
+}
+
+const updateTag = (tag: Tag) => {
+  tagService.update(tag.id, { name: tag.name, color: tag.color })
+}
+
+const deleteTag = (tagId: string) => {
+  tagService.delete(tagId)
+  tags.value = tagService.getAll()
+}
+
+const setDocumentCategory = (categoryId: string | null) => {
+  if (currentDocument.value) {
+    currentDocument.value.categoryId = categoryId
+    saveDocument()
+  }
+}
+
+const toggleDocumentTag = (tagId: string) => {
+  if (!currentDocument.value) return
+  const docTags = currentDocument.value.tags || []
+  const index = docTags.indexOf(tagId)
+  if (index > -1) {
+    docTags.splice(index, 1)
+  } else {
+    docTags.push(tagId)
+  }
+  currentDocument.value.tags = docTags
+  saveDocument()
+}
+
 const createNewDocument = () => {
-  const doc = documentService.create('无标题', '')
+  const categoryId = selectedCategoryId.value || null
+  const doc = documentService.create('无标题', '', categoryId, [])
   loadDocuments()
   openDocument(doc.id)
 }
@@ -357,6 +590,8 @@ const openDocument = (id: string) => {
       id: doc.id,
       title: doc.title,
       content: doc.content,
+      categoryId: doc.categoryId || null,
+      tags: doc.tags || []
     })
     currentDocumentId.value = id
     lastSavedContent.value = doc.content
@@ -401,14 +636,20 @@ const saveDocument = (isAuto: boolean = false) => {
 
   const content = doc.content
   const title = doc.title
+  const categoryId = doc.categoryId
+  const tags = doc.tags
 
   if (!isAuto) {
     const lastContent = lastSavedContent.value || ''
     const lastTitle = lastSavedTitle.value || ''
+    const lastCategoryId = lastSavedCategoryId.value || ''
+    const lastTags = lastSavedTags.value || []
     const contentChanged = content !== lastContent
     const titleChanged = title !== lastTitle
+    const categoryChanged = categoryId !== lastCategoryId
+    const tagsChanged = JSON.stringify(tags) !== JSON.stringify(lastTags)
     
-    if (!contentChanged && !titleChanged) {
+    if (!contentChanged && !titleChanged && !categoryChanged && !tagsChanged) {
       console.debug('saveDocument: no changes detected')
       return
     }
@@ -424,6 +665,8 @@ const saveDocument = (isAuto: boolean = false) => {
     documentService.update(doc.id, {
       title,
       content,
+      categoryId: doc.categoryId,
+      tags: doc.tags
     })
 
     const versionResult = documentVersionService.createVersion({
@@ -442,16 +685,22 @@ const saveDocument = (isAuto: boolean = false) => {
     const docIndex = documents.value.findIndex((d) => d.id === doc.id)
     if (docIndex !== -1) {
       documents.value[docIndex].title = title
+      documents.value[docIndex].categoryId = doc.categoryId
+      documents.value[docIndex].tags = doc.tags
     }
 
     const openIndex = openDocuments.value.findIndex((d) => d.id === doc.id)
     if (openIndex !== -1) {
       openDocuments.value[openIndex].title = title
       openDocuments.value[openIndex].content = content
+      openDocuments.value[openIndex].categoryId = doc.categoryId
+      openDocuments.value[openIndex].tags = doc.tags
     }
 
     lastSavedContent.value = content
     lastSavedTitle.value = title
+    lastSavedCategoryId.value = categoryId
+    lastSavedTags.value = [...tags]
 
     if (showHistoryPanel.value && currentDocumentId.value) {
       versions.value = documentVersionService.getVersions(currentDocumentId.value)
@@ -579,8 +828,16 @@ const focusEditor = () => {
   // Focus handled by TiptapEditor component
 }
 
+const handleKeyDown = (e: KeyboardEvent) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault()
+    saveDocument()
+  }
+}
+
 onMounted(() => {
   loadDocuments()
+  loadCategoriesAndTags()
   loadUserName()
   settingsStore.loadSettings()
 
@@ -593,13 +850,6 @@ onBeforeUnmount(() => {
     clearTimeout(autoSaveTimer.value)
   }
 })
-
-const handleKeyDown = (e: KeyboardEvent) => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-    e.preventDefault()
-    saveDocument()
-  }
-}
 </script>
 
 <style scoped>
@@ -651,6 +901,80 @@ const handleKeyDown = (e: KeyboardEvent) => {
 .add-btn:hover {
   background: var(--color-bg-gray);
   color: var(--color-primary);
+}
+
+.category-section {
+  padding: 8px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 6px;
+  margin-bottom: 4px;
+}
+
+.category-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+
+.manage-categories-btn {
+  font-size: 11px;
+  color: var(--color-primary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.manage-categories-btn:hover {
+  text-decoration: underline;
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.category-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  transition: background-color 0.15s ease;
+}
+
+.category-item:hover {
+  background: var(--color-bg-gray);
+}
+
+.category-item.active {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.category-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.category-count {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--color-text-muted);
 }
 
 .file-tree {
@@ -906,6 +1230,87 @@ const handleKeyDown = (e: KeyboardEvent) => {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.toolbar-dropdown {
+  position: relative;
+}
+
+.toolbar-dropdown:hover .dropdown-menu,
+.toolbar-dropdown:focus-within .dropdown-menu {
+  display: block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: var(--color-bg-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  min-width: 180px;
+  max-height: 360px;
+  overflow-y: auto;
+  z-index: 100;
+  display: none;
+  padding: 4px 0;
+}
+
+.category-dropdown {
+  right: auto;
+  left: 0;
+}
+
+.tags-dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.tags-dropdown .dropdown-menu {
+  right: auto;
+  left: 0;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  transition: background-color 0.15s ease;
+}
+
+.dropdown-item:hover {
+  background: var(--color-bg-gray);
+}
+
+.dropdown-item.active {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.tag-checkbox {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.tag-checkbox.checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--color-border-light);
+  margin: 4px 0;
 }
 
 .toolbar-btn {
@@ -1202,6 +1607,54 @@ const handleKeyDown = (e: KeyboardEvent) => {
 
 .settings-dialog {
   width: 520px;
+}
+
+.category-dialog,
+.tag-dialog {
+  width: 480px;
+}
+
+.category-form,
+.tag-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.color-input {
+  width: 50px;
+  height: 36px;
+  padding: 2px;
+  cursor: pointer;
+}
+
+.color-input-small {
+  width: 36px;
+  height: 30px;
+  padding: 2px;
+  cursor: pointer;
+}
+
+.category-list-dialog,
+.tag-list-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.category-item-dialog,
+.tag-item-dialog {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: var(--color-bg-gray);
+  border-radius: var(--radius-sm);
+}
+
+.category-name-input,
+.tag-name-input {
+  flex: 1;
 }
 
 .settings-section {

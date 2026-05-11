@@ -5,7 +5,7 @@
       <span class="app-name">{{ title }}</span>
     </div>
     <div class="title-right">
-      <span class="storage-badge">📦 本地模式</span>
+      <span class="storage-badge">本地模式</span>
     </div>
   </div>
 </template>

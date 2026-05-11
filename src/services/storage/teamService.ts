@@ -91,4 +91,13 @@ export const teamService = {
     storage.set('aurora_docs_team_members', members)
     return true
   },
+
+  getAllMembers(): TeamMember[] {
+    return storage.get<TeamMember[]>('aurora_docs_team_members') || []
+  },
+
+  getMemberById(memberId: string): TeamMember | null {
+    const members = storage.get<TeamMember[]>('aurora_docs_team_members') || []
+    return members.find((m) => m.id === memberId) || null
+  },
 }
