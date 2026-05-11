@@ -31,14 +31,14 @@
         />
         <div class="toolbar-actions">
           <div class="toolbar-dropdown">
-            <button class="toolbar-btn" title="分类">
+            <button class="toolbar-btn" title="分类" @click.stop="showCategoryDropdown = !showCategoryDropdown">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z"/>
               </svg>
               <span v-if="getCurrentDocumentCategory()">{{ getCurrentDocumentCategory()?.name }}</span>
             </button>
-            <div class="dropdown-menu">
-              <div class="dropdown-item" :class="{ active: !getCurrentDocumentCategory() }" @click="setDocumentCategory(null)">
+            <div class="dropdown-menu" v-show="showCategoryDropdown">
+              <div class="dropdown-item" :class="{ active: !getCurrentDocumentCategory() }" @click="setDocumentCategory(null); showCategoryDropdown = false">
                 无分类
               </div>
               <div 
@@ -46,37 +46,37 @@
                 :key="cat.id"
                 class="dropdown-item" 
                 :class="{ active: getCurrentDocumentCategory()?.id === cat.id }"
-                @click="setDocumentCategory(cat.id)"
+                @click="setDocumentCategory(cat.id); showCategoryDropdown = false"
               >
                 <span class="category-color" :style="{ backgroundColor: cat.color }"></span>
                 {{ cat.name }}
               </div>
               <div class="dropdown-divider"></div>
-              <div class="dropdown-item manage-link" @click="showCategoryManager = true">管理分类</div>
+              <div class="dropdown-item manage-link" @click="showCategoryManager = true; showCategoryDropdown = false">管理分类</div>
             </div>
           </div>
 
           <div class="toolbar-dropdown">
-            <button class="toolbar-btn" title="标签">
+            <button class="toolbar-btn" title="标签" @click.stop="showTagDropdown = !showTagDropdown">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
                 <line x1="7" y1="7" x2="7.01" y2="7"/>
               </svg>
               <span v-if="currentDocument.tags.length > 0">{{ currentDocument.tags.length }}</span>
             </button>
-            <div class="dropdown-menu">
+            <div class="dropdown-menu" v-show="showTagDropdown">
               <div 
                 v-for="tag in tags" 
                 :key="tag.id"
                 class="dropdown-item" 
                 :class="{ active: currentDocument.tags.includes(tag.id) }"
-                @click="toggleDocumentTag(tag.id)"
+                @click="toggleDocumentTag(tag.id); showTagDropdown = false"
               >
                 <span class="tag-color" :style="{ backgroundColor: tag.color }"></span>
                 {{ tag.name }}
               </div>
               <div class="dropdown-divider"></div>
-              <div class="dropdown-item manage-link" @click="showTagManager = true">管理标签</div>
+              <div class="dropdown-item manage-link" @click="showTagManager = true; showTagDropdown = false">管理标签</div>
             </div>
           </div>
 
@@ -351,6 +351,8 @@ const showShareDialog = ref(false)
 const showHistoryPanel = ref(false)
 const showCategoryManager = ref(false)
 const showTagManager = ref(false)
+const showCategoryDropdown = ref(false)
+const showTagDropdown = ref(false)
 const shareSuccess = ref(false)
 const versions = ref<DocumentVersion[]>([])
 const selectedVersionId = ref<string | null>(null)
@@ -640,6 +642,14 @@ const handleOpenDocument = (event: Event) => {
   }
 }
 
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  if (!target.closest('.toolbar-dropdown')) {
+    showCategoryDropdown.value = false
+    showTagDropdown.value = false
+  }
+}
+
 watch(currentDocumentId, () => {
   loadVersions()
 })
@@ -655,10 +665,12 @@ onMounted(() => {
   }
   
   window.addEventListener('open-document', handleOpenDocument)
+  document.addEventListener('click', handleClickOutside)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('open-document', handleOpenDocument)
+  document.removeEventListener('click', handleClickOutside)
 })
 </script>
 

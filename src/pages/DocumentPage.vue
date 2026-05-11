@@ -45,34 +45,36 @@
         class="document-item"
         @click="handleEdit(doc.id)"
       >
-        <div class="doc-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-          </svg>
-        </div>
-        <div class="doc-info">
-          <div class="doc-title">{{ doc.title || '无标题文档' }}</div>
-          <div class="doc-meta">
-            <span v-if="getCategory(doc.categoryId)" class="category-badge" :style="{ backgroundColor: getCategory(doc.categoryId)?.color + '20', color: getCategory(doc.categoryId)?.color }">
-              {{ getCategory(doc.categoryId)?.name }}
-            </span>
-            <span class="doc-date">{{ formatDate(doc.updatedAt) }}</span>
+        <div class="doc-header">
+          <div class="doc-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
           </div>
-          <div class="doc-tags" v-if="doc.tags && doc.tags.length > 0">
-            <span 
-              v-for="tagId in doc.tags.slice(0, 3)" 
-              :key="tagId"
-              class="tag-badge"
-              :style="{ backgroundColor: getTag(tagId)?.color + '20', color: getTag(tagId)?.color }"
-            >
-              {{ getTag(tagId)?.name }}
-            </span>
-            <span v-if="doc.tags.length > 3" class="tag-more">+{{ doc.tags.length - 3 }}</span>
+          <div class="doc-info">
+            <div class="doc-title">{{ doc.title || '无标题文档' }}</div>
+            <div class="doc-meta">
+              <span v-if="getCategory(doc.categoryId)" class="category-badge" :style="{ backgroundColor: getCategory(doc.categoryId)?.color + '20', color: getCategory(doc.categoryId)?.color }">
+                {{ getCategory(doc.categoryId)?.name }}
+              </span>
+              <span class="doc-date">{{ formatDate(doc.updatedAt) }}</span>
+            </div>
           </div>
         </div>
-        <div class="doc-actions" @click.stop>
-          <button class="action-btn" @click="handleShare(doc.id)" title="分享">
+        <div class="doc-tags" v-if="doc.tags && doc.tags.length > 0">
+          <span 
+            v-for="tagId in doc.tags.slice(0, 5)" 
+            :key="tagId"
+            class="tag-badge"
+            :style="{ backgroundColor: getTag(tagId)?.color + '20', color: getTag(tagId)?.color }"
+          >
+            {{ getTag(tagId)?.name }}
+          </span>
+          <span v-if="doc.tags.length > 5" class="tag-more">+{{ doc.tags.length - 5 }}</span>
+        </div>
+        <div class="doc-actions">
+          <button class="action-btn" @click.stop="handleShare(doc.id)" title="分享">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="18" cy="5" r="3"/>
               <circle cx="6" cy="12" r="3"/>
@@ -81,7 +83,7 @@
               <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
             </svg>
           </button>
-          <button class="action-btn danger" @click="handleDelete(doc.id)" title="删除">
+          <button class="action-btn danger" @click.stop="handleDelete(doc.id)" title="删除">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="3 6 5 6 21 6"/>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -237,15 +239,16 @@ onMounted(() => {
 
 <style scoped>
 .documents-page {
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
+  padding: 24px;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 .header-left {
@@ -255,7 +258,7 @@ onMounted(() => {
 }
 
 .page-header h2 {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
@@ -264,72 +267,94 @@ onMounted(() => {
 .doc-count {
   font-size: 13px;
   color: var(--color-text-muted);
+  padding: 4px 10px;
+  background: var(--color-bg-gray);
+  border-radius: 12px;
 }
 
 .filter-section {
   display: flex;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .search-input {
   flex: 1;
+  padding: 10px 14px;
+  font-size: 14px;
 }
 
 .filter-select {
   width: 180px;
+  padding: 10px 14px;
+  font-size: 14px;
 }
 
 .empty-state {
   text-align: center;
-  padding: 60px 40px;
+  padding: 80px 40px;
   background: var(--color-bg-white);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--color-border-light);
 }
 
 .empty-icon {
   color: var(--color-text-muted);
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .empty-state h3 {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
 }
 
 .empty-state p {
   font-size: 14px;
   color: var(--color-text-muted);
-  margin: 0 0 20px 0;
+  margin: 0 0 24px 0;
 }
 
 .document-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
 }
 
 .document-item {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
   background: var(--color-bg-white);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background-color 0.15s ease;
-  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  border: 1px solid var(--color-border-light);
 }
 
 .document-item:hover {
-  background: var(--color-bg-gray);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border);
+}
+
+.doc-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .doc-icon {
-  color: var(--color-text-muted);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-light);
+  border-radius: var(--radius-sm);
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
@@ -345,6 +370,7 @@ onMounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.4;
 }
 
 .doc-meta {
@@ -369,55 +395,54 @@ onMounted(() => {
 .doc-tags {
   display: flex;
   gap: 4px;
-  margin-top: 6px;
   flex-wrap: wrap;
 }
 
 .tag-badge {
-  padding: 2px 6px;
-  font-size: 10px;
+  padding: 2px 8px;
+  font-size: 11px;
   font-weight: 500;
   border-radius: 4px;
 }
 
 .tag-more {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--color-text-muted);
+  padding: 2px 4px;
 }
 
 .doc-actions {
   display: flex;
-  gap: 4px;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-.document-item:hover .doc-actions {
-  opacity: 1;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border-light);
 }
 
 .action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   background: transparent;
-  border: none;
-  border-radius: 6px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   color: var(--color-text-muted);
   transition: all 0.15s ease;
 }
 
 .action-btn:hover {
-  background: var(--color-bg-hover);
+  background: var(--color-bg-gray);
   color: var(--color-text-primary);
+  border-color: var(--color-border);
 }
 
 .action-btn.danger:hover {
   background: #fff1f0;
   color: #ff3b30;
+  border-color: #ffccc7;
 }
 
 .share-desc {

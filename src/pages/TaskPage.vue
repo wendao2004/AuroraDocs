@@ -328,8 +328,9 @@ onMounted(() => {
 
 <style scoped>
 .task-page {
-  max-width: 800px;
+  max-width: 850px;
   margin: 0 auto;
+  padding: 24px;
 }
 
 .page-header {
@@ -346,7 +347,7 @@ onMounted(() => {
 }
 
 .page-header h2 {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
@@ -355,28 +356,39 @@ onMounted(() => {
 .task-count {
   font-size: 13px;
   color: var(--color-text-muted);
+  padding: 4px 10px;
+  background: var(--color-bg-gray);
+  border-radius: 12px;
 }
 
 .task-stats {
-  display: flex;
-  gap: 32px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
   margin-bottom: 24px;
-  padding: 16px 20px;
-  background: var(--color-bg-white);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-light);
 }
 
 .stat-item {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
+  transition: all 0.2s ease;
+}
+
+.stat-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .stat-number {
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--color-primary);
+  margin-bottom: 4px;
 }
 
 .stat-label {
@@ -386,12 +398,16 @@ onMounted(() => {
 
 .task-filter {
   display: flex;
-  gap: 4px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 4px;
+  background: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
 }
 
 .filter-btn {
-  padding: 6px 14px;
+  padding: 8px 16px;
   font-size: 13px;
   background: transparent;
   border: none;
@@ -407,54 +423,60 @@ onMounted(() => {
 }
 
 .filter-btn.active {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
+  background: var(--color-primary);
+  color: white;
 }
 
 .empty-state {
   text-align: center;
-  padding: 60px 40px;
+  padding: 80px 40px;
   background: var(--color-bg-white);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--color-border-light);
 }
 
 .empty-icon {
   color: var(--color-text-muted);
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .empty-state h3 {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
 }
 
 .empty-state p {
   font-size: 14px;
   color: var(--color-text-muted);
-  margin: 0 0 20px 0;
+  margin: 0 0 24px 0;
 }
 
 .task-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 12px;
 }
 
 .task-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: 14px;
+  padding: 16px;
   background: var(--color-bg-white);
-  border-radius: var(--radius-sm);
-  transition: background-color 0.15s ease;
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  border: 1px solid var(--color-border-light);
 }
 
 .task-item:hover {
   background: var(--color-bg-gray);
+  transform: translateX(4px);
+}
+
+.task-item.completed {
+  opacity: 0.7;
 }
 
 .task-item.completed .task-title {
@@ -477,14 +499,18 @@ onMounted(() => {
 }
 
 .checkmark {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border: 2px solid var(--color-border);
-  border-radius: 4px;
-  transition: all 0.15s ease;
+  border-radius: 6px;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.checkbox-wrapper:hover .checkmark {
+  border-color: var(--color-primary);
 }
 
 .checkbox-wrapper input:checked + .checkmark {
@@ -495,7 +521,7 @@ onMounted(() => {
 .checkbox-wrapper input:checked + .checkmark::after {
   content: '✓';
   color: white;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: bold;
 }
 
@@ -506,25 +532,25 @@ onMounted(() => {
 }
 
 .task-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--color-text-primary);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .task-meta {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .priority-badge,
 .status-badge {
-  padding: 2px 8px;
+  padding: 3px 10px;
   font-size: 11px;
   font-weight: 500;
-  border-radius: 4px;
+  border-radius: 12px;
   color: white;
 }
 
@@ -537,17 +563,23 @@ onMounted(() => {
 .status-badge.completed { background: #34c759; }
 
 .due-date {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--color-text-muted);
+  padding: 2px 8px;
+  background: var(--color-bg-gray);
+  border-radius: 4px;
 }
 
 .assignee-badge {
-  padding: 2px 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
   font-size: 11px;
   font-weight: 500;
-  border-radius: 4px;
-  background: #e3f2fd;
-  color: #1976d2;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-radius: 12px;
 }
 
 .delete-btn {

@@ -213,15 +213,16 @@ onMounted(() => {
 
 <style scoped>
 .team-page {
-  max-width: 900px;
+  max-width: 950px;
   margin: 0 auto;
+  padding: 24px;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 .header-left {
@@ -231,7 +232,7 @@ onMounted(() => {
 }
 
 .page-header h2 {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
@@ -240,37 +241,40 @@ onMounted(() => {
 .team-count {
   font-size: 13px;
   color: var(--color-text-muted);
+  padding: 4px 10px;
+  background: var(--color-bg-gray);
+  border-radius: 12px;
 }
 
 .empty-state {
   text-align: center;
-  padding: 60px 40px;
+  padding: 80px 40px;
   background: var(--color-bg-white);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--color-border-light);
 }
 
 .empty-icon {
   color: var(--color-text-muted);
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .empty-state h3 {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
 }
 
 .empty-state p {
   font-size: 14px;
   color: var(--color-text-muted);
-  margin: 0 0 20px 0;
+  margin: 0 0 24px 0;
 }
 
 .team-content {
   display: flex;
-  gap: 24px;
+  gap: 20px;
 }
 
 .team-list {
@@ -278,7 +282,11 @@ onMounted(() => {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 8px;
+  padding: 8px;
+  background: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
 }
 
 .team-item {
@@ -286,10 +294,10 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background: var(--color-bg-white);
+  background: transparent;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: all 0.2s ease;
   border: 1px solid transparent;
 }
 
@@ -306,7 +314,7 @@ onMounted(() => {
   width: 40px;
   height: 40px;
   border-radius: var(--radius-sm);
-  background: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
   color: white;
   display: flex;
   align-items: center;
@@ -314,6 +322,7 @@ onMounted(() => {
   font-size: 16px;
   font-weight: 600;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
 }
 
 .team-info {
@@ -341,16 +350,17 @@ onMounted(() => {
 .team-detail {
   flex: 1;
   background: var(--color-bg-white);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--color-border-light);
-  padding: 24px;
+  padding: 28px;
+  box-shadow: var(--shadow-sm);
 }
 
 .detail-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   padding-bottom: 20px;
   border-bottom: 1px solid var(--color-border-light);
 }
@@ -358,37 +368,38 @@ onMounted(() => {
 .detail-title {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 
 .detail-avatar {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius-md);
-  background: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
 }
 
-.detail-info h3 {
-  font-size: 18px;
+.detail-title h3 {
+  font-size: 20px;
   font-weight: 600;
   margin: 0 0 4px 0;
   color: var(--color-text-primary);
 }
 
-.detail-info p {
-  font-size: 13px;
+.detail-title p {
+  font-size: 14px;
   color: var(--color-text-muted);
   margin: 0;
 }
 
 .member-section h4 {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   margin: 0 0 16px 0;
   color: var(--color-text-primary);
@@ -396,9 +407,9 @@ onMounted(() => {
 
 .empty-members {
   text-align: center;
-  padding: 32px;
+  padding: 40px;
   background: var(--color-bg-gray);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   color: var(--color-text-muted);
   font-size: 14px;
 }
@@ -406,21 +417,23 @@ onMounted(() => {
 .member-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 10px;
 }
 
 .member-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: var(--color-bg-gray);
-  border-radius: var(--radius-sm);
-  transition: background-color 0.15s ease;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  border: 1px solid var(--color-border-light);
 }
 
 .member-item:hover {
-  background: var(--color-bg-hover);
+  background: var(--color-bg-gray);
+  transform: translateX(4px);
 }
 
 .member-avatar {
