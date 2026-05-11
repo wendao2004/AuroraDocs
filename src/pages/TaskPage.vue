@@ -79,6 +79,9 @@
             >
               {{ TaskStatusLabels[task.status] }}
             </span>
+            <span v-if="task.assigneeName" class="assignee-badge">
+              👤 {{ task.assigneeName }}
+            </span>
             <span v-if="task.dueDate" class="due-date">
               🗓 {{ formatDate(task.dueDate) }}
             </span>
@@ -118,8 +121,26 @@
               </select>
             </div>
             <div class="form-group">
+              <label>负责人</label>
+              <select v-model="taskForm.assigneeId" class="input">
+                <option :value="null">未分配</option>
+                <option v-for="member in teamMembers" :key="member.id" :value="member.id">
+                  {{ member.userName }}
+                </option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
               <label>截止日期</label>
               <input v-model="taskForm.dueDate" type="date" class="input" />
+            </div>
+            <div class="form-group">
+              <label>添加成员</label>
+              <div class="add-member-row">
+                <input v-model="newMemberName" class="input" placeholder="成员姓名" />
+                <button class="btn btn-primary" @click="handleAddMember" style="white-space: nowrap">添加</button>
+              </div>
             </div>
           </div>
           <div class="dialog-actions">
@@ -153,24 +174,29 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { taskService } from '../services/storage/taskService'
+import { teamService } from '../services/storage/teamService'
 import {
   TaskStatusLabels,
   TaskPriorityLabels,
 } from '../models/Task'
 import type { TaskListItem, TaskPriority, TaskStatus } from '../models/Task'
+import type { TeamMember } from '../models/Team'
 
 const tasks = ref<TaskListItem[]>([])
+const teamMembers = ref<TeamMember[]>([])
 const filterStatus = ref<TaskStatus | 'all'>('all')
 const showCreateDialog = ref(false)
 const showDeleteDialog = ref(false)
 const editingTaskId = ref<string | null>(null)
 const deleteTargetId = ref<string | null>(null)
+const newMemberName = ref('')
 
 const taskForm = ref({
   title: '',
   description: '',
   priority: 'medium' as TaskPriority,
   dueDate: '',
+  assigneeId: null as string | null,
 })
 
 const taskStatusOptions = [
@@ -207,6 +233,10 @@ const loadTasks = () => {
   tasks.value = taskService.getAll()
 }
 
+const loadTeamMembers = () => {
+  teamMembers.value = teamService.getAllMembers()
+}
+
 const closeCreateDialog = () => {
   showCreateDialog.value = false
   editingTaskId.value = null
@@ -215,7 +245,9 @@ const closeCreateDialog = () => {
     description: '',
     priority: 'medium',
     dueDate: '',
+    assigneeId: null,
   }
+  newMemberName.value = ''
 }
 
 const handleSaveTask = () => {
@@ -228,6 +260,7 @@ const handleSaveTask = () => {
       title: taskForm.value.title.trim(),
       description: taskForm.value.description.trim(),
       priority: taskForm.value.priority,
+      assigneeId: taskForm.value.assigneeId,
       dueDate,
     })
   } else {
@@ -235,7 +268,7 @@ const handleSaveTask = () => {
       taskForm.value.title.trim(),
       taskForm.value.description.trim(),
       taskForm.value.priority,
-      null,
+      taskForm.value.assigneeId,
       dueDate
     )
   }
@@ -253,8 +286,17 @@ const handleEditTask = (id: string) => {
       description: task.description,
       priority: task.priority,
       dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+      assigneeId: task.assigneeId,
     }
     showCreateDialog.value = true
+  }
+}
+
+const handleAddMember = () => {
+  if (newMemberName.value.trim()) {
+    teamService.addMember('default_team', newMemberName.value.trim(), `${newMemberName.value.trim()}@example.com`)
+    loadTeamMembers()
+    newMemberName.value = ''
   }
 }
 
@@ -280,6 +322,7 @@ const confirmDelete = () => {
 
 onMounted(() => {
   loadTasks()
+  loadTeamMembers()
 })
 </script>
 
@@ -498,6 +541,15 @@ onMounted(() => {
   color: var(--color-text-muted);
 }
 
+.assignee-badge {
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 4px;
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
 .delete-btn {
   width: 28px;
   height: 28px;
@@ -531,5 +583,23 @@ onMounted(() => {
   color: var(--color-text-secondary);
   line-height: 1.6;
   font-size: 14px;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.add-member-row {
+  display: flex;
+  gap: 8px;
+}
+
+.add-member-row .input {
+  flex: 1;
 }
 </style>

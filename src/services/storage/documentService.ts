@@ -19,6 +19,8 @@ export const documentService = {
     return docs.map((doc) => ({
       id: doc.id,
       title: doc.title,
+      categoryId: doc.categoryId || null,
+      tags: doc.tags || [],
       updatedAt: new Date(doc.updatedAt),
       authorName: '当前用户',
     }))
@@ -26,16 +28,22 @@ export const documentService = {
 
   getById(id: string): Document | null {
     const docs = getDocuments()
-    return docs.find((doc) => doc.id === id) || null
+    const doc = docs.find((doc) => doc.id === id) || null
+    if (doc && !doc.tags) {
+      doc.tags = []
+    }
+    return doc
   },
 
-  create(title: string, content: string = ''): Document {
+  create(title: string, content: string = '', categoryId: string | null = null, tags: string[] = []): Document {
     const docs = getDocuments()
     const now = new Date()
     const newDoc: Document = {
       id: generateId(),
       title,
       content,
+      categoryId,
+      tags,
       createdAt: now,
       updatedAt: now,
       authorId: 'current_user',
@@ -45,13 +53,14 @@ export const documentService = {
     return newDoc
   },
 
-  update(id: string, updates: Partial<Pick<Document, 'title' | 'content'>>): Document | null {
+  update(id: string, updates: Partial<Pick<Document, 'title' | 'content' | 'categoryId' | 'tags'>>): Document | null {
     const docs = getDocuments()
     const index = docs.findIndex((doc) => doc.id === id)
     if (index === -1) return null
 
     docs[index] = {
       ...docs[index],
+      tags: docs[index].tags || [],
       ...updates,
       updatedAt: new Date(),
     }
@@ -73,5 +82,51 @@ export const documentService = {
     const doc = this.getById(id)
     if (!doc) return null
     return `${window.location.origin}/#/share/${id}`
+  },
+
+  getByCategory(categoryId: string): DocumentListItem[] {
+    const docs = getDocuments()
+    return docs
+      .filter((doc) => doc.categoryId === categoryId)
+      .map((doc) => ({
+        id: doc.id,
+        title: doc.title,
+        categoryId: doc.categoryId || null,
+        tags: doc.tags || [],
+        updatedAt: new Date(doc.updatedAt),
+        authorName: '当前用户',
+      }))
+  },
+
+  getByTag(tagId: string): DocumentListItem[] {
+    const docs = getDocuments()
+    return docs
+      .filter((doc) => (doc.tags || []).includes(tagId))
+      .map((doc) => ({
+        id: doc.id,
+        title: doc.title,
+        categoryId: doc.categoryId || null,
+        tags: doc.tags || [],
+        updatedAt: new Date(doc.updatedAt),
+        authorName: '当前用户',
+      }))
+  },
+
+  search(keyword: string): DocumentListItem[] {
+    const lowerKeyword = keyword.toLowerCase()
+    const docs = getDocuments()
+    return docs
+      .filter((doc) => 
+        doc.title.toLowerCase().includes(lowerKeyword) || 
+        doc.content.toLowerCase().includes(lowerKeyword)
+      )
+      .map((doc) => ({
+        id: doc.id,
+        title: doc.title,
+        categoryId: doc.categoryId || null,
+        tags: doc.tags || [],
+        updatedAt: new Date(doc.updatedAt),
+        authorName: '当前用户',
+      }))
   },
 }

@@ -5,6 +5,8 @@ const STORAGE_KEYS = {
   CURRENT_USER: 'aurora_docs_current_user',
   APP_SETTINGS: 'aurora_docs_settings',
   DOCUMENT_VERSIONS: 'aurora_docs_document_versions',
+  CATEGORIES: 'aurora_docs_categories',
+  TAGS: 'aurora_docs_tags',
 }
 
 export const storage = {

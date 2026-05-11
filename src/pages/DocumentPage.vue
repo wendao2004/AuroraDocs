@@ -10,6 +10,19 @@
       </button>
     </div>
 
+    <div class="filter-section">
+      <input 
+        v-model="searchKeyword" 
+        class="input search-input" 
+        placeholder="搜索文档..." 
+        @input="handleSearch"
+      />
+      <select v-model="filterCategory" class="input filter-select" @change="applyFilters">
+        <option value="">全部分类</option>
+        <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+      </select>
+    </div>
+
     <div v-if="documents.length === 0" class="empty-state">
       <div class="empty-icon">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -40,7 +53,23 @@
         </div>
         <div class="doc-info">
           <div class="doc-title">{{ doc.title || '无标题文档' }}</div>
-          <div class="doc-meta">{{ formatDate(doc.updatedAt) }}</div>
+          <div class="doc-meta">
+            <span v-if="getCategory(doc.categoryId)" class="category-badge" :style="{ backgroundColor: getCategory(doc.categoryId)?.color + '20', color: getCategory(doc.categoryId)?.color }">
+              {{ getCategory(doc.categoryId)?.name }}
+            </span>
+            <span class="doc-date">{{ formatDate(doc.updatedAt) }}</span>
+          </div>
+          <div class="doc-tags" v-if="doc.tags && doc.tags.length > 0">
+            <span 
+              v-for="tagId in doc.tags.slice(0, 3)" 
+              :key="tagId"
+              class="tag-badge"
+              :style="{ backgroundColor: getTag(tagId)?.color + '20', color: getTag(tagId)?.color }"
+            >
+              {{ getTag(tagId)?.name }}
+            </span>
+            <span v-if="doc.tags.length > 3" class="tag-more">+{{ doc.tags.length - 3 }}</span>
+          </div>
         </div>
         <div class="doc-actions" @click.stop>
           <button class="action-btn" @click="handleShare(doc.id)" title="分享">
@@ -101,16 +130,22 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { documentService } from '../services/storage/documentService'
+import { categoryService } from '../services/storage/categoryService'
+import { tagService } from '../services/storage/tagService'
 import { shareService } from '../services/shareService'
-import type { DocumentListItem } from '../models/Document'
+import type { DocumentListItem, Category, Tag } from '../models/Document'
 
 const router = useRouter()
 const documents = ref<DocumentListItem[]>([])
+const categories = ref<Category[]>([])
+const tags = ref<Tag[]>([])
 const showShareDialog = ref(false)
 const showDeleteDialog = ref(false)
 const shareLink = ref('')
 const copySuccess = ref(false)
 const deleteTargetId = ref<string | null>(null)
+const searchKeyword = ref('')
+const filterCategory = ref('')
 
 const formatDate = (date: Date) => {
   const d = new Date(date)
@@ -124,8 +159,36 @@ const formatDate = (date: Date) => {
   return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 }
 
+const getCategory = (categoryId: string | null) => {
+  if (!categoryId) return null
+  return categories.value.find((c) => c.id === categoryId) || null
+}
+
+const getTag = (tagId: string) => {
+  return tags.value.find((t) => t.id === tagId) || null
+}
+
 const loadDocuments = () => {
-  documents.value = documentService.getAll()
+  if (searchKeyword.value) {
+    documents.value = documentService.search(searchKeyword.value)
+  } else if (filterCategory.value) {
+    documents.value = documentService.getByCategory(filterCategory.value)
+  } else {
+    documents.value = documentService.getAll()
+  }
+}
+
+const loadCategoriesAndTags = () => {
+  categories.value = categoryService.getAll()
+  tags.value = tagService.getAll()
+}
+
+const handleSearch = () => {
+  loadDocuments()
+}
+
+const applyFilters = () => {
+  loadDocuments()
 }
 
 const handleCreate = () => {
@@ -167,6 +230,7 @@ const copyLink = async () => {
 }
 
 onMounted(() => {
+  loadCategoriesAndTags()
   loadDocuments()
 })
 </script>
@@ -200,6 +264,20 @@ onMounted(() => {
 .doc-count {
   font-size: 13px;
   color: var(--color-text-muted);
+}
+
+.filter-section {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  flex: 1;
+}
+
+.filter-select {
+  width: 180px;
 }
 
 .empty-state {
@@ -270,9 +348,41 @@ onMounted(() => {
 }
 
 .doc-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.category-badge {
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 4px;
+}
+
+.doc-date {
   font-size: 12px;
   color: var(--color-text-muted);
-  margin-top: 2px;
+}
+
+.doc-tags {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.tag-badge {
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 500;
+  border-radius: 4px;
+}
+
+.tag-more {
+  font-size: 10px;
+  color: var(--color-text-muted);
 }
 
 .doc-actions {
