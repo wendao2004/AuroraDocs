@@ -228,79 +228,97 @@
       </div>
     </main>
 
-    <aside v-if="showHistoryPanel" class="history-panel">
-      <div class="history-header">
-        <h3>版本历史</h3>
-        <button class="close-btn" @click="showHistoryPanel = false">×</button>
-      </div>
-      <div class="history-content">
-        <div v-if="versions.length === 0" class="empty-history">
-          <p>暂无版本记录</p>
-          <p class="hint">点击保存版本按钮创建第一个版本</p>
+    <div v-if="showHistoryPanel" class="dialog-overlay" @click.self="showHistoryPanel = false">
+      <div class="dialog history-dialog">
+        <div class="dialog-header">
+          <h3>版本历史</h3>
+          <button class="close-btn" @click="showHistoryPanel = false">×</button>
         </div>
-        <div v-else class="version-list">
-          <div
-            v-for="version in versions"
-            :key="version.id"
-            class="version-item"
-            :class="{ selected: selectedVersionId === version.id }"
-            @click="selectVersion(version)"
-          >
-            <div class="version-commit">
-              <span class="commit-hash">{{ formatCommitHash(version.id) }}</span>
-              <span class="commit-badge">HEAD</span>
-            </div>
-            <div class="version-message">{{ version.description || 'No message' }}</div>
-            <div class="version-meta">
-              <span class="version-author">{{ version.author || 'User' }}</span>
-              <span class="version-time">{{ formatTime(version.createdAt) }}</span>
-            </div>
-            <div v-if="version.changes && (version.changes.charsAdded > 0 || version.changes.charsRemoved > 0)" class="version-stats">
-              <span v-if="version.changes.charsAdded > 0" class="stat-add">+{{ version.changes.charsAdded }}</span>
-              <span v-if="version.changes.charsRemoved > 0" class="stat-remove">-{{ version.changes.charsRemoved }}</span>
-            </div>
-            <div v-if="selectedVersionId === version.id" class="version-preview">
-              <div class="preview-header">
-                <div class="preview-title">
-                  <strong>{{ version.title || '无标题' }}</strong>
-                </div>
-                <div v-if="versionDiff && versionDiff.titleDiff" class="title-changed">
-                  <span class="change-label">标题已修改</span>
-                </div>
+        <div class="dialog-content history-content">
+          <div v-if="versions.length === 0" class="empty-history">
+            <p>暂无版本记录</p>
+            <p class="hint">点击保存版本按钮创建第一个版本</p>
+          </div>
+          <div v-else class="version-list">
+            <div
+              v-for="version in versions"
+              :key="version.id"
+              class="version-item"
+              :class="{ selected: selectedVersionId === version.id }"
+              @click="selectVersion(version)"
+            >
+              <div class="version-commit">
+                <span class="commit-hash">{{ formatCommitHash(version.id) }}</span>
+                <span class="commit-badge">HEAD</span>
               </div>
-              <div class="preview-diff" v-if="versionDiff">
-                <div class="diff-header">
-                  <span class="diff-label">与上一版本差异</span>
-                </div>
-                <div class="diff-content">
-                  <div
-                    v-for="(line, index) in versionDiff.lines"
-                    :key="index"
-                    class="diff-line"
-                    :class="{
-                      'diff-add': line.startsWith('+'),
-                      'diff-remove': line.startsWith('-'),
-                      'diff-context': line.startsWith('  ')
-                    }"
-                  >
-                    {{ line }}
+              <div class="version-message">{{ version.description || 'No message' }}</div>
+              <div class="version-meta">
+                <span class="version-author">{{ version.author || 'User' }}</span>
+                <span class="version-time">{{ formatTime(version.createdAt) }}</span>
+              </div>
+              <div v-if="version.changes && (version.changes.charsAdded > 0 || version.changes.charsRemoved > 0)" class="version-stats">
+                <span v-if="version.changes.charsAdded > 0" class="stat-add">+{{ version.changes.charsAdded }}</span>
+                <span v-if="version.changes.charsRemoved > 0" class="stat-remove">-{{ version.changes.charsRemoved }}</span>
+              </div>
+              <div v-if="selectedVersionId === version.id" class="version-preview">
+                <div class="preview-header">
+                  <div class="preview-title">
+                    <strong>{{ version.title || '无标题' }}</strong>
+                  </div>
+                  <div v-if="versionDiff && versionDiff.titleDiff" class="title-changed">
+                    <span class="change-label">标题已修改</span>
                   </div>
                 </div>
-              </div>
-              <div class="version-actions">
-                <button class="btn btn-primary" @click.stop="restoreVersion(version)">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="1 4 1 10 7 10"/>
-                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
-                  </svg>
-                  恢复到该版本
-                </button>
+                <div class="preview-diff" v-if="versionDiff">
+                  <div class="diff-header">
+                    <span class="diff-label">与上一版本差异</span>
+                  </div>
+                  <div class="diff-content">
+                    <div
+                      v-for="(line, index) in versionDiff.lines"
+                      :key="index"
+                      class="diff-line"
+                      :class="{
+                        'diff-add': line.startsWith('+'),
+                        'diff-remove': line.startsWith('-'),
+                        'diff-context': line.startsWith('  ')
+                      }"
+                    >
+                      {{ line }}
+                    </div>
+                  </div>
+                </div>
+                <div class="version-actions">
+                  <button class="btn btn-primary" @click.stop="restoreVersion(version)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="1 4 1 10 7 10"/>
+                      <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                    </svg>
+                    恢复到该版本
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </aside>
+    </div>
+
+    <div v-if="showDeleteDialog" class="dialog-overlay" @click.self="cancelDeleteDocument">
+      <div class="dialog">
+        <div class="dialog-header">
+          <h3>确认删除</h3>
+          <button class="close-btn" @click="cancelDeleteDocument">×</button>
+        </div>
+        <div class="dialog-content">
+          <p class="delete-warning">确定要删除文档 "<strong>{{ deleteDocumentTitle }}</strong>" 吗？此操作不可撤销。</p>
+          <div class="dialog-actions">
+            <button class="btn btn-secondary" @click="cancelDeleteDocument">取消</button>
+            <button class="btn btn-danger" @click="confirmDeleteDocument">删除</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div v-if="showCategoryManager" class="dialog-overlay" @click.self="showCategoryManager = false">
       <div class="dialog category-dialog">
@@ -445,6 +463,9 @@ const showShareDialog = ref(false)
 const showHistoryPanel = ref(false)
 const showCategoryManager = ref(false)
 const showTagManager = ref(false)
+const showDeleteDialog = ref(false)
+const deleteDocumentId = ref<string | null>(null)
+const deleteDocumentTitle = ref('')
 const versions = ref<DocumentVersion[]>([])
 const selectedVersionId = ref<string | null>(null)
 const versionDiff = ref<{ lines: string[], titleDiff: boolean } | null>(null)
@@ -622,9 +643,27 @@ const closeDocument = (id: string) => {
 }
 
 const deleteDocument = (id: string) => {
-  closeDocument(id)
-  documentService.delete(id)
-  loadDocuments()
+  const doc = documents.value.find(d => d.id === id)
+  deleteDocumentId.value = id
+  deleteDocumentTitle.value = doc?.title || '无标题文档'
+  showDeleteDialog.value = true
+}
+
+const confirmDeleteDocument = () => {
+  if (deleteDocumentId.value) {
+    closeDocument(deleteDocumentId.value)
+    documentService.delete(deleteDocumentId.value)
+    loadDocuments()
+  }
+  showDeleteDialog.value = false
+  deleteDocumentId.value = null
+  deleteDocumentTitle.value = ''
+}
+
+const cancelDeleteDocument = () => {
+  showDeleteDialog.value = false
+  deleteDocumentId.value = null
+  deleteDocumentTitle.value = ''
 }
 
 const saveDocument = (isAuto: boolean = false) => {
@@ -1378,43 +1417,14 @@ onBeforeUnmount(() => {
   margin: 0 0 20px 0;
 }
 
-.history-panel {
-  width: 320px;
-  background: var(--color-bg-white);
-  border-left: 1px solid var(--color-border);
+.history-dialog {
+  width: 560px;
+  max-height: 80vh;
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
-  animation: slideIn 0.2s ease;
 }
 
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.history-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--color-border-light);
-}
-
-.history-header h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  margin: 0;
-}
-
-.history-content {
+.history-dialog .dialog-content {
   flex: 1;
   overflow-y: auto;
   padding: 12px;
