@@ -442,7 +442,9 @@ onMounted(() => {
 .detail-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
   margin-bottom: 28px;
   padding-bottom: 20px;
   border-bottom: 1px solid var(--color-border-light);
@@ -452,17 +454,22 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .detail-title {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
+  max-width: 70%;
+  flex-shrink: 1;
 }
 
 .detail-avatar {
   width: 64px;
   height: 64px;
+  flex-shrink: 0;
   border-radius: var(--radius-lg);
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
