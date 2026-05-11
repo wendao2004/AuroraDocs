@@ -6,6 +6,8 @@ export const documentApi = {
       {
         id: '1',
         title: '项目计划书',
+        categoryId: null,
+        tags: [],
         updatedAt: new Date(),
         authorName: '张三',
       },
@@ -21,6 +23,8 @@ export const documentApi = {
       id: '1',
       title: doc.title || '未命名',
       content: doc.content || '',
+      categoryId: null,
+      tags: [],
       createdAt: new Date(),
       updatedAt: new Date(),
       authorId: '1',

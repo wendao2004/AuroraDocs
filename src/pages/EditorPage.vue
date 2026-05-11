@@ -27,9 +27,15 @@
           v-model="currentDocument.title"
           class="title-input"
           placeholder="文档标题..."
-          @input="saveDocument()"
         />
         <div class="toolbar-actions">
+          <button class="toolbar-btn save-btn" @click="saveDocument()" title="保存">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+          </button>
           <div class="toolbar-dropdown">
             <button class="toolbar-btn" title="分类" @click.stop="showCategoryDropdown = !showCategoryDropdown">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -80,14 +86,7 @@
             </div>
           </div>
 
-          <button class="toolbar-btn" @click="saveVersion" title="保存版本">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="1 4 1 10 7 10"/>
-              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
-            </svg>
-          </button>
-
-          <button class="toolbar-btn" @click="showHistoryPanel = true" title="版本历史">
+          <button class="toolbar-btn" @click="openHistoryPanel" title="版本历史">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
               <line x1="16" y1="2" x2="16" y2="6"/>
@@ -98,7 +97,19 @@
 
           <button class="toolbar-btn" @click="showShareDialog = true" title="分享">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 2h3a1 1 0 0 1 1 1v3M18 2c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM10 2c0 1.105-1.343 2-3 2S4 3.105 4 2 5.343 0 8 0s3 .895 3 2zm3 18h3a1 1 0 0 0 1-1v-3M21 16c0-1.105 1.343-2 3-2s3 .895 3 2-1.343 2-3 2-3-.895-3-2zM8 18c0-1.105 1.343-2 3-2s3 .895 3 2-1.343 2-3 2-3-.895-3-2z"/>
+              <circle cx="18" cy="5" r="3"/>
+              <circle cx="6" cy="12" r="3"/>
+              <circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+          </button>
+          
+          <button class="toolbar-btn" @click="exportDocument" title="导出" :disabled="!currentDocument">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
           </button>
         </div>
@@ -108,8 +119,7 @@
         <TiptapEditor
           ref="editorRef"
           v-model="currentDocument.content"
-          :init-content="currentDocument.content"
-          @update="saveDocument"
+          @update:modelValue="handleContentUpdate"
         />
       </div>
     </div>
@@ -232,7 +242,7 @@
               </svg>
               <span>复制链接</span>
             </button>
-            <button class="share-btn" @click="exportDocument">
+            <button class="share-btn" @click="exportFromShareDialog">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="7 10 12 15 17 10"/>
@@ -242,6 +252,42 @@
             </button>
           </div>
           <div v-if="shareSuccess" class="success-message">✓ 链接已复制到剪贴板</div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showExportDialog" class="dialog-overlay" @click.self="showExportDialog = false">
+      <div class="dialog export-dialog">
+        <div class="dialog-header">
+          <h3>导出文档</h3>
+          <button class="close-btn" @click="showExportDialog = false">×</button>
+        </div>
+        <div class="dialog-content">
+          <div class="export-options">
+            <div v-for="option in exportOptions" :key="option.format" class="export-option" @click="exportAs(option.format)">
+              <div class="export-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path v-if="option.format === 'md'" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline v-if="option.format === 'md'" points="14 2 14 8 20 8"/>
+                  <line v-if="option.format === 'md'" x1="16" y1="13" x2="8" y2="13"/>
+                  <line v-if="option.format === 'md'" x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline v-if="option.format === 'md'" points="10 9 9 9 8 9"/>
+                  <path v-if="option.format === 'txt'" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline v-if="option.format === 'txt'" points="14 2 14 8 20 8"/>
+                  <line v-if="option.format === 'txt'" x1="16" y1="13" x2="8" y2="13"/>
+                  <line v-if="option.format === 'txt'" x1="16" y1="17" x2="8" y2="17"/>
+                  <line v-if="option.format === 'txt'" x1="10" y1="9" x2="8" y2="9"/>
+                  <path v-if="option.format === 'html'" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline v-if="option.format === 'html'" points="14 2 14 8 20 8"/>
+                  <polyline v-if="option.format === 'html'" points="12 18 16 14 12 10"/>
+                </svg>
+              </div>
+              <div class="export-info">
+                <div class="export-name">{{ option.name }}</div>
+                <div class="export-desc">{{ option.desc }}</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -321,11 +367,20 @@
         </div>
       </div>
     </div>
+    
+    <transition name="slide">
+      <div v-if="showSaveSuccess" class="save-success-toast">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+        <span>已保存</span>
+      </div>
+    </transition>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, nextTick, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import TiptapEditor from '../components/editor/TiptapEditor.vue'
 import { documentService } from '../services/storage/documentService'
 import { categoryService } from '../services/storage/categoryService'
@@ -346,9 +401,17 @@ const openDocuments = ref<{
 }[]>([])
 const currentDocumentId = ref<string | null>(null)
 const editorRef = ref<InstanceType<typeof TiptapEditor> | null>(null)
-const showSettingsDialog = ref(false)
 const showShareDialog = ref(false)
+const showExportDialog = ref(false)
 const showHistoryPanel = ref(false)
+const showSaveSuccess = ref(false)
+let saveSuccessTimer: any = null
+
+const exportOptions = [
+  { format: 'md', name: 'Markdown (.md)', desc: '导出为标准Markdown格式' },
+  { format: 'txt', name: '纯文本 (.txt)', desc: '导出为纯文本格式' },
+  { format: 'html', name: 'HTML (.html)', desc: '导出为HTML格式' }
+]
 const showCategoryManager = ref(false)
 const showTagManager = ref(false)
 const showCategoryDropdown = ref(false)
@@ -370,6 +433,7 @@ const lastSavedContent = ref('')
 const lastSavedTitle = ref('')
 const lastSavedCategoryId = ref<string | null>(null)
 const lastSavedTags = ref<string[]>([])
+const autoSaveTimer = ref<ReturnType<typeof setTimeout> | null>(null)
 
 const currentDocument = computed(() => {
   return openDocuments.value.find(doc => doc.id === currentDocumentId.value)
@@ -418,12 +482,6 @@ const openDocument = (id: string) => {
   lastSavedTitle.value = doc.title
   lastSavedCategoryId.value = doc.categoryId
   lastSavedTags.value = [...doc.tags]
-  
-  nextTick(() => {
-    if (editorRef.value) {
-      editorRef.value.setContent(doc.content)
-    }
-  })
 }
 
 const switchDocument = (id: string) => {
@@ -447,8 +505,25 @@ const closeDocument = (id: string) => {
   }
 }
 
+const handleContentUpdate = () => {
+  if (!currentDocument.value) return
+  
+  if (autoSaveTimer.value) {
+    clearTimeout(autoSaveTimer.value)
+  }
+  
+  autoSaveTimer.value = setTimeout(() => {
+    saveDocument()
+  }, 2000)
+}
+
 const saveDocument = () => {
   if (!currentDocument.value) return
+  
+  if (autoSaveTimer.value) {
+    clearTimeout(autoSaveTimer.value)
+    autoSaveTimer.value = null
+  }
   
   const hasChanges = currentDocument.value.content !== lastSavedContent.value ||
                      currentDocument.value.title !== lastSavedTitle.value ||
@@ -464,12 +539,32 @@ const saveDocument = () => {
     tags: [...currentDocument.value.tags]
   })
   
+  const doc = documentService.getById(currentDocument.value.id)
+  if (doc) {
+    documentVersionService.createVersion(doc)
+    console.log('Version created for document:', doc.id)
+  }
+  
   lastSavedContent.value = currentDocument.value.content
   lastSavedTitle.value = currentDocument.value.title
   lastSavedCategoryId.value = currentDocument.value.categoryId
   lastSavedTags.value = [...currentDocument.value.tags]
   
   loadDocuments()
+  if (currentDocumentId.value) {
+    loadVersions()
+  }
+  
+  const event = new CustomEvent('document-updated', { detail: { id: currentDocument.value.id } })
+  window.dispatchEvent(event)
+  
+  if (saveSuccessTimer) {
+    clearTimeout(saveSuccessTimer)
+  }
+  showSaveSuccess.value = true
+  saveSuccessTimer = setTimeout(() => {
+    showSaveSuccess.value = false
+  }, 2000)
 }
 
 const setDocumentCategory = (categoryId: string | null) => {
@@ -542,20 +637,19 @@ const deleteTag = (id: string) => {
   })
 }
 
-const saveVersion = () => {
-  if (currentDocument.value) {
-    documentVersionService.saveVersion(currentDocument.value.id, {
-      title: currentDocument.value.title,
-      content: currentDocument.value.content,
-      description: `版本 ${Date.now()}`
-    })
-  }
-}
-
 const loadVersions = () => {
   if (currentDocumentId.value) {
     versions.value = documentVersionService.getVersions(currentDocumentId.value)
+    console.log('Versions loaded:', versions.value.length)
   }
+}
+
+const openHistoryPanel = () => {
+  console.log('openHistoryPanel called')
+  if (currentDocumentId.value) {
+    loadVersions()
+  }
+  showHistoryPanel.value = true
 }
 
 const selectVersion = (version: DocumentVersion) => {
@@ -600,7 +694,8 @@ const restoreVersion = (version: DocumentVersion) => {
   if (currentDocument.value) {
     currentDocument.value.title = version.title
     currentDocument.value.content = version.content
-    saveDocument()
+    lastSavedContent.value = version.content
+    lastSavedTitle.value = version.title
     showHistoryPanel.value = false
     selectedVersionId.value = null
   }
@@ -621,7 +716,8 @@ const formatTime = (date: Date) => {
 
 const copyShareLink = async () => {
   if (currentDocument.value) {
-    await shareService.copyShareLink(currentDocument.value.id)
+    const link = shareService.generateShareLink(currentDocument.value.id)
+    await shareService.copyToClipboard(link)
     shareSuccess.value = true
     setTimeout(() => {
       shareSuccess.value = false
@@ -630,9 +726,140 @@ const copyShareLink = async () => {
 }
 
 const exportDocument = () => {
-  if (currentDocument.value) {
-    shareService.exportDocument(currentDocument.value)
+  console.log('exportDocument called')
+  showExportDialog.value = true
+}
+
+const exportFromShareDialog = () => {
+  console.log('exportFromShareDialog called')
+  showShareDialog.value = false
+  showExportDialog.value = true
+}
+
+const exportAs = (format: string) => {
+  console.log('exportAs called with format:', format)
+  
+  if (!currentDocument.value) {
+    console.log('No current document')
+    return
   }
+  
+  console.log('Current document:', currentDocument.value)
+  
+  let content: string
+  let mimeType: string
+  let extension: string
+  
+  switch (format) {
+    case 'md':
+      content = `# ${currentDocument.value.title}\n\n${currentDocument.value.content}`
+      mimeType = 'text/markdown'
+      extension = 'md'
+      break
+    case 'txt':
+      content = htmlToPlainText(currentDocument.value.content)
+      mimeType = 'text/plain'
+      extension = 'txt'
+      break
+    case 'html':
+      content = generateHtml(currentDocument.value.title, currentDocument.value.content)
+      mimeType = 'text/html'
+      extension = 'html'
+      break
+    default:
+      console.log('Unknown format:', format)
+      return
+  }
+  
+  console.log('Exporting with content length:', content.length)
+  
+  try {
+    const blob = new Blob([content], { type: mimeType })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${sanitizeFilename(currentDocument.value.title)}.${extension}`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    showExportDialog.value = false
+    console.log('Export successful')
+  } catch (error) {
+    console.error('Export failed:', error)
+    alert('导出失败：' + (error as Error).message)
+  }
+}
+
+const sanitizeFilename = (name: string): string => {
+  return name.replace(/[<>:"/\\|?*]/g, '_').trim() || 'untitled'
+}
+
+const htmlToPlainText = (html: string): string => {
+  const temp = document.createElement('div')
+  temp.innerHTML = html
+  let text = temp.textContent || temp.innerText || ''
+  return `${currentDocument.value?.title || ''}\n\n${text.replace(/\n{3,}/g, '\n\n')}`
+}
+
+const generateHtml = (title: string, content: string): string => {
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(title)}</title>
+  <style>
+    body {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+    }
+    h1 {
+      border-bottom: 2px solid #eee;
+      padding-bottom: 0.3em;
+    }
+    pre {
+      background: #f6f8fa;
+      padding: 16px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+    code {
+      background: #f6f8fa;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+    }
+    blockquote {
+      border-left: 4px solid #dfe2e5;
+      margin-left: 0;
+      padding-left: 16px;
+      color: #6a737d;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>${escapeHtml(title)}</h1>
+  ${content}
+</body>
+</html>`
+}
+
+const escapeHtml = (text: string): string => {
+  const div = document.createElement('div')
+  div.textContent = text
+  return div.innerHTML
 }
 
 const handleOpenDocument = (event: Event) => {
@@ -671,6 +898,13 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('open-document', handleOpenDocument)
   document.removeEventListener('click', handleClickOutside)
+  
+  if (autoSaveTimer.value) {
+    clearTimeout(autoSaveTimer.value)
+  }
+  if (saveSuccessTimer) {
+    clearTimeout(saveSuccessTimer)
+  }
 })
 </script>
 
@@ -808,6 +1042,16 @@ onBeforeUnmount(() => {
 .toolbar-btn:hover {
   background: var(--color-bg-gray);
   color: var(--color-text-primary);
+}
+
+.save-btn {
+  background: var(--color-primary);
+  color: white;
+}
+
+.save-btn:hover {
+  background: var(--color-primary-hover);
+  color: white;
 }
 
 .dropdown-menu {
@@ -996,8 +1240,59 @@ onBeforeUnmount(() => {
 }
 
 .category-dialog,
-.tag-dialog {
+.tag-dialog,
+.export-dialog {
   max-width: 520px;
+}
+
+.export-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.export-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid var(--color-border-light);
+}
+
+.export-option:hover {
+  background: var(--color-bg-gray);
+  border-color: var(--color-primary);
+}
+
+.export-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.export-info {
+  flex: 1;
+}
+
+.export-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+
+.export-desc {
+  font-size: 12px;
+  color: var(--color-text-muted);
 }
 
 .category-list,
@@ -1304,5 +1599,42 @@ onBeforeUnmount(() => {
 .version-actions {
   display: flex;
   justify-content: flex-end;
+}
+
+.save-success-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--color-bg-white);
+  color: var(--color-text-primary);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--color-border-light);
+  z-index: 999;
+}
+
+.save-success-toast svg {
+  color: #10b981;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.slide-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
 }
 </style>

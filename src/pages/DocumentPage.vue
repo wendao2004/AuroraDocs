@@ -18,9 +18,10 @@
         @input="handleSearch"
       />
       <select v-model="filterCategory" class="input filter-select" @change="applyFilters">
-        <option value="">全部分类</option>
-        <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-      </select>
+          <option value="">全部分类</option>
+          <option value="uncategorized">未分类</option>
+          <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+        </select>
     </div>
 
     <div v-if="documents.length === 0" class="empty-state">
@@ -111,13 +112,18 @@
     </div>
 
     <div v-if="showDeleteDialog" class="dialog-overlay" @click.self="showDeleteDialog = false">
-      <div class="dialog">
+      <div class="dialog delete-dialog">
         <div class="dialog-header">
           <h3>确认删除</h3>
           <button class="close-btn" @click="showDeleteDialog = false">×</button>
         </div>
         <div class="dialog-content">
-          <p class="delete-warning">确定要删除这个文档吗？此操作不可撤销。</p>
+          <div class="delete-warning">
+            <svg class="warning-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <p>确定要删除这个文档吗？此操作不可撤销。</p>
+          </div>
           <div class="dialog-actions">
             <button class="btn btn-secondary" @click="showDeleteDialog = false">取消</button>
             <button class="btn btn-danger" @click="confirmDelete">删除</button>
@@ -173,6 +179,8 @@ const getTag = (tagId: string) => {
 const loadDocuments = () => {
   if (searchKeyword.value) {
     documents.value = documentService.search(searchKeyword.value)
+  } else if (filterCategory.value === 'uncategorized') {
+    documents.value = documentService.getAll().filter(doc => !doc.categoryId)
   } else if (filterCategory.value) {
     documents.value = documentService.getByCategory(filterCategory.value)
   } else {
@@ -194,6 +202,9 @@ const applyFilters = () => {
 }
 
 const handleCreate = () => {
+  const newDoc = documentService.create('无标题文档', '', null, [])
+  const event = new CustomEvent('document-created', { detail: { id: newDoc.id } })
+  window.dispatchEvent(event)
   router.push('/')
 }
 
@@ -218,6 +229,8 @@ const confirmDelete = () => {
     loadDocuments()
     showDeleteDialog.value = false
     deleteTargetId.value = null
+    const event = new CustomEvent('document-deleted', { detail: {} })
+    window.dispatchEvent(event)
   }
 }
 
@@ -242,6 +255,8 @@ onMounted(() => {
   max-width: 900px;
   margin: 0 auto;
   padding: 24px;
+  height: calc(100vh - 60px);
+  overflow-y: auto;
 }
 
 .page-header {
@@ -469,9 +484,34 @@ onMounted(() => {
   font-size: 13px;
 }
 
+.delete-dialog {
+  border-color: #ffccc7;
+  box-shadow: 0 4px 20px rgba(255, 59, 48, 0.2);
+}
+
+.delete-dialog .dialog-header h3 {
+  color: #ff3b30;
+}
+
 .delete-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
   color: var(--color-text-secondary);
   line-height: 1.6;
   font-size: 14px;
+  padding: 12px;
+  background: #fff1f0;
+  border-radius: var(--radius-sm);
+  border-left: 4px solid #ff3b30;
+}
+
+.warning-icon {
+  color: #ff9500;
+  flex-shrink: 0;
+}
+
+.delete-warning p {
+  margin: 0;
 }
 </style>

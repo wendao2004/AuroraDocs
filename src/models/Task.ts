@@ -17,6 +17,7 @@ export type TaskPriority = 'low' | 'medium' | 'high'
 export interface TaskListItem {
   id: string
   title: string
+  description: string
   status: TaskStatus
   priority: TaskPriority
   assigneeName: string | null

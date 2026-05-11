@@ -509,7 +509,7 @@ const userName = ref('用户')
 const autoSaveTimer = ref<ReturnType<typeof setTimeout> | null>(null)
 const lastSavedContent = ref('')
 const lastSavedTitle = ref('')
-const lastSavedCategoryId = ref('')
+const lastSavedCategoryId = ref<string | null>(null)
 const lastSavedTags = ref<string[]>([])
 const newCategoryName = ref('')
 const newCategoryColor = ref('#1890ff')
@@ -744,6 +744,8 @@ const saveDocument = (isAuto: boolean = false) => {
       id: doc.id,
       title,
       content,
+      categoryId: doc.categoryId || null,
+      tags: doc.tags || [],
       createdAt: new Date(),
       updatedAt: new Date(),
       authorId: 'local-user',
@@ -849,7 +851,7 @@ const restoreVersion = (version: DocumentVersion) => {
   currentDocument.value.title = version.title
   currentDocument.value.content = version.content
   lastSavedContent.value = version.content
-  saveDocument()
+  lastSavedTitle.value = version.title
   showHistoryPanel.value = false
   versions.value = []
   selectedVersionId.value = null

@@ -41,6 +41,14 @@
             <span class="category-count">{{ documents.length }}</span>
           </div>
           <div 
+            class="category-item" 
+            :class="{ active: selectedCategoryId === 'uncategorized' }"
+            @click="selectCategory('uncategorized')"
+          >
+            <span>未分类</span>
+            <span class="category-count">{{ getUncategorizedDocCount() }}</span>
+          </div>
+          <div 
             v-for="cat in categories" 
             :key="cat.id"
             class="category-item"
@@ -81,7 +89,6 @@
         </div>
         <div v-if="documents.length === 0" class="empty-doc-list">
           <p>暂无文档</p>
-          <button class="btn btn-primary btn-sm" @click="createNewDocument">创建文档</button>
         </div>
       </div>
 
@@ -159,6 +166,22 @@
               <input v-model="userName" class="input setting-input" @input="saveUserName" />
             </div>
           </div>
+          <div class="settings-section">
+            <h4>外观</h4>
+            <div class="setting-item">
+              <div class="setting-info">
+                <div class="setting-label">夜间模式</div>
+                <div class="setting-desc">切换深色/浅色主题</div>
+              </div>
+              <button 
+                class="toggle-switch" 
+                :class="{ active: settingsStore.isDarkMode }"
+                @click="settingsStore.toggleDarkMode"
+              >
+                <span class="toggle-slider"></span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -166,7 +189,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { documentService } from '../../services/storage/documentService'
 import { categoryService } from '../../services/storage/categoryService'
@@ -202,8 +225,15 @@ const filteredDocuments = computed(() => {
   if (!selectedCategoryId.value) {
     return documents.value
   }
+  if (selectedCategoryId.value === 'uncategorized') {
+    return documents.value.filter(doc => !doc.categoryId)
+  }
   return documents.value.filter(doc => doc.categoryId === selectedCategoryId.value)
 })
+
+const getUncategorizedDocCount = () => {
+  return documents.value.filter(doc => !doc.categoryId).length
+}
 
 const loadDocuments = () => {
   documents.value = documentService.getAll()
@@ -219,7 +249,13 @@ const navigateTo = (path: string) => {
 
 const createNewDocument = () => {
   const newDoc = documentService.create('无标题文档', '', null, [])
+  const event = new CustomEvent('document-created', { detail: { id: newDoc.id } })
+  window.dispatchEvent(event)
   router.push('/')
+  setTimeout(() => {
+    const openEvent = new CustomEvent('open-document', { detail: { id: newDoc.id } })
+    window.dispatchEvent(openEvent)
+  }, 100)
 }
 
 const openDocument = (id: string) => {
@@ -278,10 +314,31 @@ const saveUserName = () => {
   settingsStore.saveSettings()
 }
 
+const handleDocumentDeleted = () => {
+  loadDocuments()
+}
+
+const handleDocumentCreated = () => {
+  loadDocuments()
+}
+
+const handleDocumentUpdated = () => {
+  loadDocuments()
+}
+
 onMounted(() => {
   loadDocuments()
   loadCategories()
   userName.value = settingsStore.userName || '用户'
+  window.addEventListener('document-deleted', handleDocumentDeleted)
+  window.addEventListener('document-created', handleDocumentCreated)
+  window.addEventListener('document-updated', handleDocumentUpdated)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('document-deleted', handleDocumentDeleted)
+  window.removeEventListener('document-created', handleDocumentCreated)
+  window.removeEventListener('document-updated', handleDocumentUpdated)
 })
 </script>
 
@@ -348,22 +405,24 @@ onMounted(() => {
 }
 
 .add-btn {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
+  background: var(--color-primary);
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  color: var(--color-text-muted);
-  transition: all 0.15s ease;
+  color: white;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
 }
 
 .add-btn:hover {
-  background: var(--color-bg-gray);
-  color: var(--color-text-primary);
+  background: var(--color-primary-hover);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
+  transform: translateY(-1px);
 }
 
 .category-section {
@@ -428,9 +487,11 @@ onMounted(() => {
 }
 
 .category-color {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .category-count {
@@ -487,7 +548,7 @@ onMounted(() => {
   border-radius: 4px;
   cursor: pointer;
   color: var(--color-text-muted);
-  opacity: 0;
+  opacity: 0.6;
   transition: all 0.15s ease;
 }
 
@@ -705,23 +766,33 @@ onMounted(() => {
 }
 
 .color-input {
-  width: 48px;
+  width: 52px;
   height: 36px;
   padding: 2px;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border: 2px solid var(--color-border);
+  border-radius: 6px;
   cursor: pointer;
   background: transparent;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.color-input:hover {
+  border-color: var(--color-primary);
 }
 
 .color-input-small {
-  width: 36px;
+  width: 38px;
   height: 32px;
   padding: 2px;
-  border: 1px solid var(--color-border);
+  border: 2px solid var(--color-border);
   border-radius: 4px;
   cursor: pointer;
   background: transparent;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.color-input-small:hover {
+  border-color: var(--color-primary);
 }
 
 .category-list-dialog {
@@ -788,5 +859,41 @@ onMounted(() => {
 
 .setting-input {
   width: 150px;
+}
+
+.toggle-switch {
+  width: 48px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--color-border);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.2s ease;
+  padding: 0;
+}
+
+.toggle-switch:hover {
+  background: var(--color-border-dark);
+}
+
+.toggle-switch.active {
+  background: var(--color-primary);
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.toggle-switch.active .toggle-slider {
+  transform: translateX(22px);
 }
 </style>
