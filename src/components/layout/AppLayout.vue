@@ -304,6 +304,22 @@
       </div>
     </div>
 
+    <div v-if="showDeleteDialog" class="dialog-overlay" @click.self="cancelDeleteDocument">
+      <div class="dialog">
+        <div class="dialog-header">
+          <h3>确认删除</h3>
+          <button class="close-btn" @click="cancelDeleteDocument">×</button>
+        </div>
+        <div class="dialog-content">
+          <p class="delete-warning">确定要删除文档 "<strong>{{ deleteDocumentTitle }}</strong>" 吗？此操作不可撤销。</p>
+          <div class="dialog-actions">
+            <button class="btn btn-secondary" @click="cancelDeleteDocument">取消</button>
+            <button class="btn btn-danger" @click="confirmDeleteDocument">删除</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div v-if="showCategoryManager" class="dialog-overlay" @click.self="showCategoryManager = false">
       <div class="dialog category-dialog">
         <div class="dialog-header">
@@ -447,6 +463,9 @@ const showShareDialog = ref(false)
 const showHistoryPanel = ref(false)
 const showCategoryManager = ref(false)
 const showTagManager = ref(false)
+const showDeleteDialog = ref(false)
+const deleteDocumentId = ref<string | null>(null)
+const deleteDocumentTitle = ref('')
 const versions = ref<DocumentVersion[]>([])
 const selectedVersionId = ref<string | null>(null)
 const versionDiff = ref<{ lines: string[], titleDiff: boolean } | null>(null)
@@ -624,9 +643,27 @@ const closeDocument = (id: string) => {
 }
 
 const deleteDocument = (id: string) => {
-  closeDocument(id)
-  documentService.delete(id)
-  loadDocuments()
+  const doc = documents.value.find(d => d.id === id)
+  deleteDocumentId.value = id
+  deleteDocumentTitle.value = doc?.title || '无标题文档'
+  showDeleteDialog.value = true
+}
+
+const confirmDeleteDocument = () => {
+  if (deleteDocumentId.value) {
+    closeDocument(deleteDocumentId.value)
+    documentService.delete(deleteDocumentId.value)
+    loadDocuments()
+  }
+  showDeleteDialog.value = false
+  deleteDocumentId.value = null
+  deleteDocumentTitle.value = ''
+}
+
+const cancelDeleteDocument = () => {
+  showDeleteDialog.value = false
+  deleteDocumentId.value = null
+  deleteDocumentTitle.value = ''
 }
 
 const saveDocument = (isAuto: boolean = false) => {
@@ -1383,10 +1420,12 @@ onBeforeUnmount(() => {
 .history-dialog {
   width: 560px;
   max-height: 80vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .history-dialog .dialog-content {
-  max-height: calc(80vh - 60px);
+  flex: 1;
   overflow-y: auto;
   padding: 12px;
 }
