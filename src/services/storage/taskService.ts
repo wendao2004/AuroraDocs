@@ -26,6 +26,7 @@ export const taskService = {
     return tasks.map((task) => ({
       id: task.id,
       title: task.title,
+      description: task.description || '',
       status: task.status,
       priority: task.priority,
       assigneeName: getAssigneeName(task.assigneeId),
@@ -102,6 +103,7 @@ export const taskService = {
       .map((task) => ({
         id: task.id,
         title: task.title,
+        description: task.description || '',
         status: task.status,
         priority: task.priority,
         assigneeName: getAssigneeName(task.assigneeId),
@@ -116,6 +118,7 @@ export const taskService = {
       .map((task) => ({
         id: task.id,
         title: task.title,
+        description: task.description || '',
         status: task.status,
         priority: task.priority,
         assigneeName: getAssigneeName(task.assigneeId),

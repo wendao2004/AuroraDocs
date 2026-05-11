@@ -1,6 +1,21 @@
 <template>
   <div class="app-layout">
     <aside class="sidebar">
+      <div class="nav-section">
+        <div 
+          v-for="item in navItems" 
+          :key="item.path"
+          class="nav-item"
+          :class="{ active: currentRoute === item.path }"
+          @click="navigateTo(item.path)"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path :d="item.icon" />
+          </svg>
+          <span>{{ item.label }}</span>
+        </div>
+      </div>
+      
       <div class="sidebar-header">
         <span class="sidebar-title">文档</span>
         <button class="add-btn" @click="createNewDocument" title="新建文档">
@@ -433,6 +448,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 import TiptapEditor from '../editor/TiptapEditor.vue'
 import { documentService } from '../../services/storage/documentService'
 import { categoryService } from '../../services/storage/categoryService'
@@ -443,6 +459,22 @@ import { useSettingsStore } from '../../stores/settingsStore'
 import type { DocumentListItem, Category, Tag } from '../../models/Document'
 
 const settingsStore = useSettingsStore()
+const router = useRouter()
+
+const navItems = [
+  { path: '/', label: '编辑器', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' },
+  { path: '/documents', label: '文档', icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' },
+  { path: '/tasks', label: '任务', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
+  { path: '/team', label: '团队', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' },
+]
+
+const currentRoute = computed(() => {
+  return router.currentRoute.value.path
+})
+
+const navigateTo = (path: string) => {
+  router.push(path)
+}
 
 interface OpenDocument {
   id: string
@@ -477,7 +509,7 @@ const userName = ref('用户')
 const autoSaveTimer = ref<ReturnType<typeof setTimeout> | null>(null)
 const lastSavedContent = ref('')
 const lastSavedTitle = ref('')
-const lastSavedCategoryId = ref('')
+const lastSavedCategoryId = ref<string | null>(null)
 const lastSavedTags = ref<string[]>([])
 const newCategoryName = ref('')
 const newCategoryColor = ref('#1890ff')
@@ -712,6 +744,8 @@ const saveDocument = (isAuto: boolean = false) => {
       id: doc.id,
       title,
       content,
+      categoryId: doc.categoryId || null,
+      tags: doc.tags || [],
       createdAt: new Date(),
       updatedAt: new Date(),
       authorId: 'local-user',
@@ -817,7 +851,7 @@ const restoreVersion = (version: DocumentVersion) => {
   currentDocument.value.title = version.title
   currentDocument.value.content = version.content
   lastSavedContent.value = version.content
-  saveDocument()
+  lastSavedTitle.value = version.title
   showHistoryPanel.value = false
   versions.value = []
   selectedVersionId.value = null
@@ -905,6 +939,36 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+}
+
+.nav-section {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  transition: all 0.15s ease;
+}
+
+.nav-item:hover {
+  background: var(--color-bg-gray);
+  color: var(--color-text-primary);
+}
+
+.nav-item.active {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 500;
 }
 
 .sidebar-header {

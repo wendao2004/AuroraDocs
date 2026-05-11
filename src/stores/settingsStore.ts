@@ -3,6 +3,7 @@ import { ref } from 'vue'
 
 export const useSettingsStore = defineStore('settings', () => {
   const isDarkMode = ref(false)
+  const userName = ref('用户')
 
   const toggleDarkMode = () => {
     isDarkMode.value = !isDarkMode.value
@@ -21,6 +22,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const saveSettings = () => {
     localStorage.setItem('settings', JSON.stringify({
       isDarkMode: isDarkMode.value,
+      userName: userName.value,
     }))
   }
 
@@ -29,14 +31,17 @@ export const useSettingsStore = defineStore('settings', () => {
     if (saved) {
       const settings = JSON.parse(saved)
       isDarkMode.value = settings.isDarkMode || false
+      userName.value = settings.userName || '用户'
       applyTheme()
     }
   }
 
   return {
     isDarkMode,
+    userName,
     toggleDarkMode,
     applyTheme,
+    saveSettings,
     loadSettings,
   }
 })

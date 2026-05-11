@@ -230,6 +230,14 @@ onMounted(() => {
   document.addEventListener('click', clickListener)
 })
 
+defineExpose({
+  setContent: (content: string) => {
+    if (editor.value) {
+      editor.value.commands.setContent(content)
+    }
+  }
+})
+
 cleanup(() => {
   if (clickListener) {
     document.removeEventListener('click', clickListener)

@@ -3,6 +3,10 @@
   --color-primary-hover: #4a48c9;
   --color-primary-light: #e8e7ff;
 
+  --color-danger: #ff3b30;
+  --color-danger-dark: #cc2f26;
+  --color-danger-light: #fff1f0;
+
   --color-bg-base: #f5f5f7;
   --color-bg-white: #ffffff;
   --color-bg-gray: #f0f0f2;
@@ -32,6 +36,10 @@
   --color-primary: #7c7cff;
   --color-primary-hover: #9898ff;
   --color-primary-light: #2a2a3d;
+
+  --color-danger: #ff453a;
+  --color-danger-dark: #ff3b30;
+  --color-danger-light: #3a1f1e;
 
   --color-bg-base: #1c1c1e;
   --color-bg-white: #2c2c2e;

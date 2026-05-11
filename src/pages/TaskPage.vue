@@ -64,29 +64,42 @@
           />
           <span class="checkmark"></span>
         </label>
-        <div class="task-content" @click="handleEditTask(task.id)">
-          <div class="task-title">{{ task.title }}</div>
-          <div class="task-meta">
-            <span
-              class="priority-badge"
-              :class="task.priority"
-            >
-              {{ TaskPriorityLabels[task.priority] }}
-            </span>
-            <span
-              class="status-badge"
-              :class="task.status"
-            >
-              {{ TaskStatusLabels[task.status] }}
-            </span>
-            <span v-if="task.assigneeName" class="assignee-badge">
-              👤 {{ task.assigneeName }}
-            </span>
-            <span v-if="task.dueDate" class="due-date">
-              🗓 {{ formatDate(task.dueDate) }}
-            </span>
+        <div class="task-content" @click="toggleTaskExpand(task.id)">
+            <div class="task-header">
+              <div class="task-title">{{ task.title }}</div>
+              <button class="expand-btn" :class="{ expanded: expandedTasks.includes(task.id) }">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+            </div>
+            <div class="task-meta">
+              <span
+                class="priority-badge"
+                :class="task.priority"
+              >
+                {{ TaskPriorityLabels[task.priority] }}
+              </span>
+              <select 
+                class="status-select" 
+                :value="task.status" 
+                @change.stop="updateTaskStatus(task.id, ($event.target as HTMLSelectElement).value as TaskStatus)"
+              >
+                <option value="pending">{{ TaskStatusLabels.pending }}</option>
+                <option value="in_progress">{{ TaskStatusLabels.in_progress }}</option>
+                <option value="completed">{{ TaskStatusLabels.completed }}</option>
+              </select>
+              <span v-if="task.assigneeName" class="assignee-badge">
+                👤 {{ task.assigneeName }}
+              </span>
+              <span v-if="task.dueDate" class="due-date" :class="{ overdue: isOverdue(task.dueDate) }">
+                🗓 {{ formatDate(task.dueDate) }}
+              </span>
+            </div>
+            <div v-if="expandedTasks.includes(task.id)" class="task-description">
+              {{ task.description || '暂无描述' }}
+            </div>
           </div>
-        </div>
         <button class="delete-btn" @click.stop="handleDelete(task.id)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"/>
@@ -190,6 +203,7 @@ const showDeleteDialog = ref(false)
 const editingTaskId = ref<string | null>(null)
 const deleteTargetId = ref<string | null>(null)
 const newMemberName = ref('')
+const expandedTasks = ref<string[]>([])
 
 const taskForm = ref({
   title: '',
@@ -277,21 +291,6 @@ const handleSaveTask = () => {
   closeCreateDialog()
 }
 
-const handleEditTask = (id: string) => {
-  const task = taskService.getById(id)
-  if (task) {
-    editingTaskId.value = id
-    taskForm.value = {
-      title: task.title,
-      description: task.description,
-      priority: task.priority,
-      dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
-      assigneeId: task.assigneeId,
-    }
-    showCreateDialog.value = true
-  }
-}
-
 const handleAddMember = () => {
   if (newMemberName.value.trim()) {
     teamService.addMember('default_team', newMemberName.value.trim(), `${newMemberName.value.trim()}@example.com`)
@@ -304,6 +303,27 @@ const toggleTaskStatus = (id: string, currentStatus: TaskStatus) => {
   const newStatus: TaskStatus = currentStatus === 'completed' ? 'pending' : 'completed'
   taskService.updateStatus(id, newStatus)
   loadTasks()
+}
+
+const toggleTaskExpand = (id: string) => {
+  const index = expandedTasks.value.indexOf(id)
+  if (index > -1) {
+    expandedTasks.value.splice(index, 1)
+  } else {
+    expandedTasks.value.push(id)
+  }
+}
+
+const updateTaskStatus = (id: string, status: TaskStatus) => {
+  taskService.updateStatus(id, status)
+  loadTasks()
+}
+
+const isOverdue = (date: Date) => {
+  const dueDate = new Date(date)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return dueDate < today
 }
 
 const handleDelete = (id: string) => {
@@ -328,8 +348,9 @@ onMounted(() => {
 
 <style scoped>
 .task-page {
-  max-width: 800px;
+  max-width: 850px;
   margin: 0 auto;
+  padding: 24px;
 }
 
 .page-header {
@@ -346,7 +367,7 @@ onMounted(() => {
 }
 
 .page-header h2 {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
@@ -355,28 +376,39 @@ onMounted(() => {
 .task-count {
   font-size: 13px;
   color: var(--color-text-muted);
+  padding: 4px 10px;
+  background: var(--color-bg-gray);
+  border-radius: 12px;
 }
 
 .task-stats {
-  display: flex;
-  gap: 32px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
   margin-bottom: 24px;
-  padding: 16px 20px;
-  background: var(--color-bg-white);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-light);
 }
 
 .stat-item {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
+  transition: all 0.2s ease;
+}
+
+.stat-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .stat-number {
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--color-primary);
+  margin-bottom: 4px;
 }
 
 .stat-label {
@@ -386,12 +418,16 @@ onMounted(() => {
 
 .task-filter {
   display: flex;
-  gap: 4px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 4px;
+  background: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
 }
 
 .filter-btn {
-  padding: 6px 14px;
+  padding: 8px 16px;
   font-size: 13px;
   background: transparent;
   border: none;
@@ -407,54 +443,60 @@ onMounted(() => {
 }
 
 .filter-btn.active {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
+  background: var(--color-primary);
+  color: white;
 }
 
 .empty-state {
   text-align: center;
-  padding: 60px 40px;
+  padding: 80px 40px;
   background: var(--color-bg-white);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--color-border-light);
 }
 
 .empty-icon {
   color: var(--color-text-muted);
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .empty-state h3 {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
 }
 
 .empty-state p {
   font-size: 14px;
   color: var(--color-text-muted);
-  margin: 0 0 20px 0;
+  margin: 0 0 24px 0;
 }
 
 .task-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 12px;
 }
 
 .task-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: 14px;
+  padding: 16px;
   background: var(--color-bg-white);
-  border-radius: var(--radius-sm);
-  transition: background-color 0.15s ease;
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  border: 1px solid var(--color-border-light);
 }
 
 .task-item:hover {
   background: var(--color-bg-gray);
+  transform: translateX(4px);
+}
+
+.task-item.completed {
+  opacity: 0.7;
 }
 
 .task-item.completed .task-title {
@@ -477,14 +519,18 @@ onMounted(() => {
 }
 
 .checkmark {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border: 2px solid var(--color-border);
-  border-radius: 4px;
-  transition: all 0.15s ease;
+  border-radius: 6px;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.checkbox-wrapper:hover .checkmark {
+  border-color: var(--color-primary);
 }
 
 .checkbox-wrapper input:checked + .checkmark {
@@ -495,7 +541,7 @@ onMounted(() => {
 .checkbox-wrapper input:checked + .checkmark::after {
   content: '✓';
   color: white;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: bold;
 }
 
@@ -506,25 +552,25 @@ onMounted(() => {
 }
 
 .task-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--color-text-primary);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .task-meta {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .priority-badge,
 .status-badge {
-  padding: 2px 8px;
+  padding: 3px 10px;
   font-size: 11px;
   font-weight: 500;
-  border-radius: 4px;
+  border-radius: 12px;
   color: white;
 }
 
@@ -532,22 +578,89 @@ onMounted(() => {
 .priority-badge.medium { background: #ff9500; }
 .priority-badge.high { background: #ff3b30; }
 
-.status-badge.pending { background: #ff9500; }
-.status-badge.in_progress { background: #007aff; }
-.status-badge.completed { background: #34c759; }
+.status-select {
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 12px;
+  border: 1px solid var(--color-border-light);
+  background: var(--color-bg-white);
+  cursor: pointer;
+  outline: none;
+  color: white;
+}
+
+.status-select option[value="pending"] { background: #fff; color: #ff9500; }
+.status-select option[value="in_progress"] { background: #fff; color: #007aff; }
+.status-select option[value="completed"] { background: #fff; color: #34c759; }
+
+.status-select:has(option[value="pending"]:checked) { background: #ff9500; }
+.status-select:has(option[value="in_progress"]:checked) { background: #007aff; }
+.status-select:has(option[value="completed"]:checked) { background: #34c759; }
 
 .due-date {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--color-text-muted);
+  padding: 2px 8px;
+  background: var(--color-bg-gray);
+  border-radius: 4px;
+}
+
+.due-date.overdue {
+  background: #fff1f0;
+  color: #ff3b30;
+}
+
+.task-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.expand-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition: all 0.2s ease;
+  transform: rotate(0deg);
+}
+
+.expand-btn:hover {
+  background: var(--color-bg-gray);
+}
+
+.expand-btn.expanded {
+  transform: rotate(180deg);
+}
+
+.task-description {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: var(--color-bg-gray);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
 }
 
 .assignee-badge {
-  padding: 2px 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
   font-size: 11px;
   font-weight: 500;
-  border-radius: 4px;
-  background: #e3f2fd;
-  color: #1976d2;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-radius: 12px;
 }
 
 .delete-btn {
